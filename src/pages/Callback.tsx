@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DERIV_CLIENT_ID, REDIRECT_URI } from '@/lib/auth'
 
 export default function Callback() {
   const navigate = useNavigate()
@@ -16,17 +17,25 @@ export default function Callback() {
       return
     }
 
-    // Store code and verifier for token exchange
-    sessionStorage.setItem('auth_code', code)
-    sessionStorage.setItem('code_verifier', codeVerifier || '')
-
-    // Clear state
     sessionStorage.removeItem('oauth_state')
     sessionStorage.removeItem('pkce_code_verifier')
 
-    // For now store code directly and redirect to dashboard
-    localStorage.setItem('deriv_auth_code', code)
-    navigate('/dashboard')
+    // Exchange code for token via Vercel serverless function
+    fetch('/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, codeVerifier, redirectUri: REDIRECT_URI, clientId: DERIV_CLIENT_ID })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.access_token) {
+          localStorage.setItem('deriv_token', data.access_token)
+          navigate('/dashboard')
+        } else {
+          navigate('/login')
+        }
+      })
+      .catch(() => navigate('/login'))
   }, [])
 
   return (
