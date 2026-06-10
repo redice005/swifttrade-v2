@@ -38,7 +38,7 @@ export default function Dashboard() {
       }
     })
 
-    return unsub
+    return () => { unsub() }
   }, [status, market])
 
   const placeContract = (type: string) => {
