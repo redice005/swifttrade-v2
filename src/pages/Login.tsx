@@ -1,62 +1,18 @@
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { loginWithDeriv } from '@/lib/auth'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleLogin = async () => {
-    setLoading(true)
-    setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
-    setLoading(false)
-  }
-
-  const handleSignup = async () => {
-    setLoading(true)
-    setError('')
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) setError(error.message)
-    else setError('Check your email for confirmation!')
-    setLoading(false)
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#1a1a2e', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '400px' }}>
-        <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: '2rem' }}>Swift Trade</h1>
-        {error && <p style={{ color: error.includes('Check') ? 'green' : 'red', marginBottom: '1rem' }}>{error}</p>}
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', borderRadius: '8px', border: 'none', background: '#0a0a1a', color: '#fff', boxSizing: 'border-box' }}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '0.75rem', marginBottom: '1rem', borderRadius: '8px', border: 'none', background: '#0a0a1a', color: '#fff', boxSizing: 'border-box' }}
-        />
+      <div style={{ background: '#1a1a2e', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+        <h1 style={{ color: '#6c63ff', marginBottom: '0.5rem' }}>⚡ Swift Trade</h1>
+        <p style={{ color: '#aaa', marginBottom: '2rem' }}>Professional trading platform for Kenyan traders</p>
         <button
-          onClick={handleLogin}
-          disabled={loading}
-          style={{ width: '100%', padding: '0.75rem', background: '#6c63ff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', marginBottom: '0.5rem' }}
+          onClick={loginWithDeriv}
+          style={{ width: '100%', padding: '1rem', background: '#6c63ff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
         >
-          {loading ? 'Loading...' : 'Login'}
+          Login with Deriv
         </button>
-        <button
-          onClick={handleSignup}
-          disabled={loading}
-          style={{ width: '100%', padding: '0.75rem', background: 'transparent', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer' }}
-        >
-          Sign Up
-        </button>
+        <p style={{ color: '#666', marginTop: '1rem', fontSize: '0.8rem' }}>Don't have a Deriv account? Clicking above will let you sign up too.</p>
       </div>
     </div>
   )
