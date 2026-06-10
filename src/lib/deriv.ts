@@ -1,0 +1,1 @@
+export const DERIV_WS_URL = 'wss://ws.derivws.com/websockets/v3?app_id=1089'
