@@ -15,7 +15,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
-  const { status, send, subscribe } = useDerivSocket('pat_e363fe366ae2a7c904b7f3912f606274f4b8002a06e43574a5c0f1eccb8d2849')
+  const derivToken = localStorage.getItem('deriv_token')
+const { status, send, subscribe } = useDerivSocket(derivToken)
 
   useEffect(() => {
     if (status !== 'open') return
