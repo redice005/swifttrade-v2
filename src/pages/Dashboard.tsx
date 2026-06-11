@@ -19,7 +19,6 @@ export default function Dashboard() {
 
   const token = localStorage.getItem('deriv_token')
 
-  // Fetch accounts and get WS URL
   useEffect(() => {
     if (!token) return
 
@@ -33,7 +32,6 @@ export default function Dashboard() {
     })
   }, [token, accountType])
 
-  // Subscribe to WS messages
   useEffect(() => {
     if (status !== 'open') return
 
@@ -54,8 +52,22 @@ export default function Dashboard() {
         }
       }
       if (data.msg_type === 'buy') {
-        setMessage(data.error ? `Error: ${data.error.message}` : 'Contract placed!')
-        setLoading(false)
+        if (data.error) {
+          setMessage(`Error: ${data.error.message}`)
+          setLoading(false)
+        } else {
+          send({ proposal_open_contract: 1, subscribe: 1, contract_id: data.buy.contract_id })
+        }
+      }
+      if (data.msg_type === 'proposal_open_contract') {
+        const contract = data.proposal_open_contract
+        if (contract.status === 'won') {
+          setMessage(`✅ Won! Profit: +${contract.profit} ${currency}`)
+          setLoading(false)
+        } else if (contract.status === 'lost') {
+          setMessage(`❌ Lost! -${contract.buy_price} ${currency}`)
+          setLoading(false)
+        }
       }
     })
 
@@ -65,24 +77,22 @@ export default function Dashboard() {
     return () => { unsub() }
   }, [status, market])
 
- const placeContract = (type: string) => {
-  if (!send) return
-  setLoading(true)
-  setMessage('')
-  
-  // Step 1: Get proposal first
-  send({
-    proposal: 1,
-    amount: parseFloat(stake),
-    basis: 'stake',
-    contract_type: type,
-    currency: currency,
-    duration: parseInt(duration),
-    duration_unit: 't',
-    underlying_symbol: market,
-    subscribe: 1
-  })
-}
+  const placeContract = (type: string) => {
+    if (!send) return
+    setLoading(true)
+    setMessage('')
+    send({
+      proposal: 1,
+      amount: parseFloat(stake),
+      basis: 'stake',
+      contract_type: type,
+      currency: currency,
+      duration: parseInt(duration),
+      duration_unit: 't',
+      underlying_symbol: market,
+      subscribe: 1
+    })
+  }
 
   const logout = () => {
     localStorage.removeItem('deriv_token')
@@ -147,20 +157,28 @@ export default function Dashboard() {
         <input
           type="number"
           value={duration}
+          min="1"
+          max="5"
           onChange={e => setDuration(e.target.value)}
           style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: 'none', borderRadius: '8px', marginBottom: '1rem', boxSizing: 'border-box' }}
         />
-        {message && <p style={{ color: message.includes('Error') ? 'red' : 'green', marginBottom: '1rem' }}>{message}</p>}
+        {message && (
+          <p style={{ 
+            color: message.includes('Error') ? 'red' : message.includes('Won') ? '#22c55e' : '#ef4444', 
+            marginBottom: '1rem',
+            fontWeight: 'bold'
+          }}>{message}</p>
+        )}
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             onClick={() => placeContract('CALL')}
             disabled={loading}
-            style={{ flex: 1, padding: '1rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
+            style={{ flex: 1, padding: '1rem', background: loading ? '#333' : '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
           >⬆ Rise</button>
           <button
             onClick={() => placeContract('PUT')}
             disabled={loading}
-            style={{ flex: 1, padding: '1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
+            style={{ flex: 1, padding: '1rem', background: loading ? '#333' : '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
           >⬇ Fall</button>
         </div>
       </div>
