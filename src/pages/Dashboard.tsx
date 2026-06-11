@@ -45,35 +45,42 @@ export default function Dashboard() {
       if (data.msg_type === 'tick') {
         setCurrentPrice(data.tick.quote)
       }
+      if (data.msg_type === 'proposal') {
+        if (data.error) {
+          setMessage(`Error: ${data.error.message}`)
+          setLoading(false)
+        } else {
+          send({ buy: data.proposal.id, price: parseFloat(stake) })
+        }
+      }
       if (data.msg_type === 'buy') {
         setMessage(data.error ? `Error: ${data.error.message}` : 'Contract placed!')
         setLoading(false)
       }
     })
 
-    // Request balance and ticks
     send({ balance: 1, subscribe: 1 })
     send({ ticks: market, subscribe: 1 })
 
     return () => { unsub() }
   }, [status, market])
 
-  const placeContract = (type: string) => {
+ const placeContract = (type: string) => {
   if (!send) return
   setLoading(true)
   setMessage('')
+  
+  // Step 1: Get proposal first
   send({
-    buy: 1,
-    price: parseFloat(stake),
-    parameters: {
-      amount: parseFloat(stake),
-      basis: 'stake',
-      contract_type: type,
-      currency: currency,
-      duration: parseInt(duration),
-      duration_unit: 't',
-      symbol: market,
-    }
+    proposal: 1,
+    amount: parseFloat(stake),
+    basis: 'stake',
+    contract_type: type,
+    currency: currency,
+    duration: parseInt(duration),
+    duration_unit: 't',
+    underlying_symbol: market,
+    subscribe: 1
   })
 }
 
