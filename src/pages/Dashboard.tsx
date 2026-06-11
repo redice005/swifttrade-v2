@@ -1,31 +1,43 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
 import { useDerivSocket } from '@/hooks/useDerivSocket'
+import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
 
 export default function Dashboard() {
-  const { logout } = useAuth()
   const [accountType, setAccountType] = useState<'demo' | 'real'>('demo')
   const [balance, setBalance] = useState<number | null>(null)
   const [currency, setCurrency] = useState('USD')
   const [market, setMarket] = useState('R_100')
   const [stake, setStake] = useState('10')
   const [duration, setDuration] = useState('5')
-  const [contractType, setContractType] = useState('CALL')
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [wsUrl, setWsUrl] = useState<string | null>(null)
+  const [accounts, setAccounts] = useState<any[]>([])
 
-  const derivToken = localStorage.getItem('deriv_token')
-const { status, send, subscribe } = useDerivSocket(derivToken)
+  const { status, send, subscribe } = useDerivSocket(wsUrl)
 
+  const token = localStorage.getItem('deriv_token')
+
+  // Fetch accounts and get WS URL
+  useEffect(() => {
+    if (!token) return
+
+    getDerivAccounts(token).then(async (accs) => {
+      if (!accs || accs.length === 0) return
+      setAccounts(accs)
+
+      const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
+      const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
+      setWsUrl(url)
+    })
+  }, [token, accountType])
+
+  // Subscribe to WS messages
   useEffect(() => {
     if (status !== 'open') return
 
     const unsub = subscribe((data) => {
-      if (data.msg_type === 'authorize') {
-        send({ balance: 1, subscribe: 1 })
-        send({ ticks: market, subscribe: 1 })
-      }
       if (data.msg_type === 'balance') {
         setBalance(data.balance.balance)
         setCurrency(data.balance.currency)
@@ -38,6 +50,10 @@ const { status, send, subscribe } = useDerivSocket(derivToken)
         setLoading(false)
       }
     })
+
+    // Request balance and ticks
+    send({ balance: 1, subscribe: 1 })
+    send({ ticks: market, subscribe: 1 })
 
     return () => { unsub() }
   }, [status, market])
@@ -60,6 +76,11 @@ const { status, send, subscribe } = useDerivSocket(derivToken)
         symbol: market,
       }
     })
+  }
+
+  const logout = () => {
+    localStorage.removeItem('deriv_token')
+    window.location.href = '/login'
   }
 
   return (
@@ -109,15 +130,6 @@ const { status, send, subscribe } = useDerivSocket(derivToken)
 
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem' }}>Place a contract</p>
-        <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>Contract Type</p>
-        <select
-          value={contractType}
-          onChange={e => setContractType(e.target.value)}
-          style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: 'none', borderRadius: '8px', marginBottom: '1rem' }}
-        >
-          <option value="CALL">Rise</option>
-          <option value="PUT">Fall</option>
-        </select>
         <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>Stake (USD)</p>
         <input
           type="number"
