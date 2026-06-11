@@ -59,24 +59,23 @@ export default function Dashboard() {
   }, [status, market])
 
   const placeContract = (type: string) => {
-    if (!send) return
-    setLoading(true)
-    setMessage('')
-    send({
-      buy: 1,
-      subscribe: 1,
-      price: parseFloat(stake),
-      parameters: {
-        amount: parseFloat(stake),
-        basis: 'stake',
-        contract_type: type,
-        currency: currency,
-        duration: parseInt(duration),
-        duration_unit: 't',
-        symbol: market,
-      }
-    })
-  }
+  if (!send) return
+  setLoading(true)
+  setMessage('')
+  send({
+    buy: 1,
+    price: parseFloat(stake),
+    parameters: {
+      amount: parseFloat(stake),
+      basis: 'stake',
+      contract_type: type,
+      currency: currency,
+      duration: parseInt(duration),
+      duration_unit: 't',
+      symbol: market,
+    }
+  })
+}
 
   const logout = () => {
     localStorage.removeItem('deriv_token')
