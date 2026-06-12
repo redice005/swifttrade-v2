@@ -1,7 +1,10 @@
+// v2 routes
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Callback from '@/pages/Callback'
+import Bots from '@/pages/Bots'
+import Analysis from '@/pages/Analysis'
 
 function App() {
   const token = localStorage.getItem('deriv_token')
