@@ -204,10 +204,10 @@ export default function Dashboard() {
               ⬇ Fall</button>
           </>}
           {contractCategory === 'even_odd' && <>
-            <button onClick={() => placeContract('EVEN')} disabled={loading}
+            <button onClick={() => placeContract('DIGITEVEN')} disabled={loading}
               style={{ flex: 1, padding: '1rem', background: loading ? '#333' : '#6c63ff', color: '#fff', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
               Even</button>
-            <button onClick={() => placeContract('ODD')} disabled={loading}
+            <button onClick={() => placeContract('DIGITODD')} disabled={loading}
               style={{ flex: 1, padding: '1rem', background: loading ? '#333' : '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
               Odd</button>
           </>}
