@@ -130,11 +130,22 @@ export default function Dashboard() {
           onChange={e => setMarket(e.target.value)}
           style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: 'none', borderRadius: '8px' }}
         >
-          <option value="R_100">Volatility 100</option>
-          <option value="R_75">Volatility 75</option>
-          <option value="R_50">Volatility 50</option>
-          <option value="R_25">Volatility 25</option>
           <option value="R_10">Volatility 10</option>
+<option value="R_25">Volatility 25</option>
+<option value="R_50">Volatility 50</option>
+<option value="R_75">Volatility 75</option>
+<option value="R_100">Volatility 100</option>
+<option value="R_150">Volatility 150</option>
+<option value="R_200">Volatility 200</option>
+<option value="1HZ10V">Volatility 10 (1s)</option>
+<option value="1HZ15V">Volatility 15 (1s)</option>
+<option value="1HZ25V">Volatility 25 (1s)</option>
+<option value="1HZ30V">Volatility 30 (1s)</option>
+<option value="1HZ50V">Volatility 50 (1s)</option>
+<option value="1HZ75V">Volatility 75 (1s)</option>
+<option value="1HZ100V">Volatility 100 (1s)</option>
+<option value="1HZ150V">Volatility 150 (1s)</option>
+<option value="1HZ200V">Volatility 200 (1s)</option>
         </select>
         {currentPrice && (
           <div style={{ background: '#0a0a1a', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
