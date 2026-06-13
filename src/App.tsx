@@ -15,6 +15,8 @@ function App() {
         <Route path="/login" element={!token ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/callback" element={<Callback />} />
         <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/bots" element={token ? <Bots /> : <Navigate to="/login" />} />
+        <Route path="/analysis" element={token ? <Analysis /> : <Navigate to="/login" />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
     </BrowserRouter>
