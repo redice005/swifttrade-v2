@@ -24,6 +24,7 @@ export default function Bots() {
   const [market, setMarket] = useState('R_100')
   const [totalPnL, setTotalPnL] = useState(0)
   const tradeIdRef = useRef(0)
+  const pendingTradeRef = useRef(false)
 
   // OU Bot settings
   const [ouStartPrediction, setOuStartPrediction] = useState<'over' | 'under'>('over')
@@ -46,6 +47,7 @@ export default function Bots() {
     startingStake: 1,
     startPrediction: 'over' as string,
     currentPrediction: 'over' as string,
+    currentDigit: '1',
     startDigit: '1',
     recoveryDigit: '6',
     stopLoss: 10,
@@ -74,6 +76,12 @@ export default function Bots() {
 
   useEffect(() => {
     if (status !== 'open') return
+    
+    // If bot was running and WS reconnected, resume
+    if (botStateRef.current.running && !pendingTradeRef.current) {
+      setTimeout(() => placeNextTrade(), 1000)
+    }
+
     const unsub = subscribe((data) => {
       if (data.msg_type === 'balance') {
         setBalance(data.balance.balance)
@@ -96,6 +104,7 @@ export default function Bots() {
         if (!botStateRef.current.running) return
         if (data.error) {
           setBotMessage(`Error: ${data.error.message}`)
+          pendingTradeRef.current = false
           stopBot('Error occurred')
           return
         }
@@ -105,15 +114,26 @@ export default function Bots() {
       if (data.msg_type === 'buy') {
         if (data.error) {
           setBotMessage(`Error: ${data.error.message}`)
+          pendingTradeRef.current = false
           stopBot('Error occurred')
           return
         }
         const contractId = data.buy.contract_id
         const logId = ++tradeIdRef.current
+        const state = botStateRef.current
+
+        // Build label with digit
+        let label = ''
+        if (state.activeBot === 'ou') {
+          label = `${state.currentPrediction.toUpperCase()} ${state.currentDigit}`
+        } else {
+          label = state.currentPrediction.toUpperCase()
+        }
+
         setTradeLogs(prev => [{
           id: logId,
-          type: botStateRef.current.currentPrediction.toUpperCase(),
-          stake: botStateRef.current.currentStake,
+          type: label,
+          stake: state.currentStake,
           result: 'pending',
           profit: 0,
         }, ...prev])
@@ -127,6 +147,7 @@ export default function Bots() {
 
         const won = contract.status === 'won'
         const profit = won ? parseFloat(contract.profit) : -parseFloat(contract.buy_price)
+        pendingTradeRef.current = false
 
         setTradeLogs(prev => prev.map(log =>
           log.id === tradeIdRef.current
@@ -155,6 +176,7 @@ export default function Bots() {
     state.lossCount = 0
     state.currentStake = state.startingStake
     state.currentPrediction = state.startPrediction
+    state.currentDigit = state.startDigit
     setCurrentStake(state.startingStake)
   }
 
@@ -168,14 +190,17 @@ export default function Bots() {
       return
     }
 
+    // Loss 1: flip prediction and switch to recovery digit
     if (state.lossCount === 1) {
       if (state.activeBot === 'ou') {
         state.currentPrediction = state.startPrediction === 'over' ? 'under' : 'over'
+        state.currentDigit = state.recoveryDigit
       } else {
         state.currentPrediction = state.startPrediction === 'even' ? 'odd' : 'even'
       }
     }
 
+    // Loss 2 and 3: double stake, keep same prediction and digit
     if (state.lossCount >= 2) {
       state.currentStake = state.currentStake * 2
     }
@@ -186,19 +211,17 @@ export default function Bots() {
 
   const placeNextTrade = () => {
     if (!botStateRef.current.running) return
+    if (pendingTradeRef.current) return
     const state = botStateRef.current
+
+    pendingTradeRef.current = true
 
     let contractType = ''
     let barrier = undefined
 
     if (state.activeBot === 'ou') {
-      if (state.currentPrediction === 'over') {
-        contractType = 'DIGITOVER'
-        barrier = state.lossCount === 0 ? state.startDigit : state.recoveryDigit
-      } else {
-        contractType = 'DIGITUNDER'
-        barrier = state.lossCount === 0 ? state.recoveryDigit : state.startDigit
-      }
+      contractType = state.currentPrediction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
+      barrier = state.currentDigit
     } else {
       contractType = state.currentPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
     }
@@ -241,6 +264,7 @@ export default function Bots() {
       state.currentPrediction = ouStartPrediction
       state.startDigit = ouStartDigit
       state.recoveryDigit = ouRecoveryDigit
+      state.currentDigit = ouStartDigit
       state.stopLoss = parseFloat(ouStopLoss)
       state.takeProfit = parseFloat(ouTakeProfit)
     } else {
@@ -253,6 +277,7 @@ export default function Bots() {
     }
 
     state.startingBalance = balance || 0
+    pendingTradeRef.current = false
     setBotRunning(true)
     setCurrentStake(state.currentStake)
     setBotMessage('🤖 Bot started!')
@@ -263,17 +288,22 @@ export default function Bots() {
 
   const stopBot = (reason?: string) => {
     botStateRef.current.running = false
+    botStateRef.current.startingBalance = 0
+    pendingTradeRef.current = false
     setBotRunning(false)
     setBotMessage(reason || '⏹ Bot stopped')
   }
 
   const resetBot = () => {
-    stopBot()
+    botStateRef.current.running = false
+    botStateRef.current.startingBalance = 0
+    botStateRef.current.lossCount = 0
+    pendingTradeRef.current = false
+    setBotRunning(false)
     setTradeLogs([])
     setCurrentStake(0)
     setBotMessage('')
     setTotalPnL(0)
-    botStateRef.current.lossCount = 0
   }
 
   const inputStyle = {
@@ -354,7 +384,7 @@ export default function Bots() {
           Swift Recovery EO</button>
       </div>
 
-      {/* Main Layout - Bot Settings + Trade Log side by side */}
+      {/* Main Layout */}
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
 
         {/* Bot Settings */}
