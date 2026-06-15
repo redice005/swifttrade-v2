@@ -7,7 +7,7 @@ type TradeLog = {
   id: number
   type: string
   stake: number
-  result: 'won' | 'lost' | 'pending'
+  result: 'won' | 'lost'
   profit: number
 }
 
@@ -25,6 +25,8 @@ export default function Bots() {
   const [totalPnL, setTotalPnL] = useState(0)
   const tradeIdRef = useRef(0)
   const pendingTradeRef = useRef(false)
+  const pendingTimeoutRef = useRef<any>(null)
+  const totalPnLRef = useRef(0)
 
   // OU Bot settings
   const [ouStartPrediction, setOuStartPrediction] = useState<'over' | 'under'>('over')
@@ -42,7 +44,7 @@ export default function Bots() {
 
   const botStateRef = useRef({
     running: false,
-    lossCount: 0,
+    inRecovery: false,
     currentStake: 1,
     startingStake: 1,
     startPrediction: 'over' as string,
@@ -76,8 +78,7 @@ export default function Bots() {
 
   useEffect(() => {
     if (status !== 'open') return
-    
-    // If bot was running and WS reconnected, resume
+
     if (botStateRef.current.running && !pendingTradeRef.current) {
       setTimeout(() => placeNextTrade(), 1000)
     }
@@ -103,9 +104,12 @@ export default function Bots() {
       if (data.msg_type === 'proposal') {
         if (!botStateRef.current.running) return
         if (data.error) {
-          setBotMessage(`Error: ${data.error.message}`)
+          // Auto retry on proposal error
           pendingTradeRef.current = false
-          stopBot('Error occurred')
+          if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current)
+          setTimeout(() => {
+            if (botStateRef.current.running) placeNextTrade()
+          }, 2000)
           return
         }
         send({ buy: data.proposal.id, price: botStateRef.current.currentStake })
@@ -113,30 +117,15 @@ export default function Bots() {
 
       if (data.msg_type === 'buy') {
         if (data.error) {
-          setBotMessage(`Error: ${data.error.message}`)
+          // Auto retry on buy error
           pendingTradeRef.current = false
-          stopBot('Error occurred')
+          if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current)
+          setTimeout(() => {
+            if (botStateRef.current.running) placeNextTrade()
+          }, 2000)
           return
         }
         const contractId = data.buy.contract_id
-        const logId = ++tradeIdRef.current
-        const state = botStateRef.current
-
-        // Build label with digit
-        let label = ''
-        if (state.activeBot === 'ou') {
-          label = `${state.currentPrediction.toUpperCase()} ${state.currentDigit}`
-        } else {
-          label = state.currentPrediction.toUpperCase()
-        }
-
-        setTradeLogs(prev => [{
-          id: logId,
-          type: label,
-          stake: state.currentStake,
-          result: 'pending',
-          profit: 0,
-        }, ...prev])
         send({ proposal_open_contract: 1, subscribe: 1, contract_id: contractId })
       }
 
@@ -147,22 +136,57 @@ export default function Bots() {
 
         const won = contract.status === 'won'
         const profit = won ? parseFloat(contract.profit) : -parseFloat(contract.buy_price)
+
+        // Update PnL ref and state
+        totalPnLRef.current = totalPnLRef.current + profit
+        setTotalPnL(totalPnLRef.current)
+
+        // Clear pending
         pendingTradeRef.current = false
+        if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current)
 
-        setTradeLogs(prev => prev.map(log =>
-          log.id === tradeIdRef.current
-            ? { ...log, result: won ? 'won' : 'lost', profit }
-            : log
-        ))
+        const state = botStateRef.current
 
-        setTotalPnL(prev => prev + profit)
+        // Build label
+        let label = ''
+        if (state.activeBot === 'ou') {
+          label = `${state.currentPrediction.toUpperCase()} ${state.currentDigit}`
+        } else {
+          label = state.currentPrediction.toUpperCase()
+        }
+
+        // Only add completed trades to log
+        const logId = ++tradeIdRef.current
+        setTradeLogs(prev => [{
+          id: logId,
+          type: label,
+          stake: state.currentStake,
+          result: won ? 'won' : 'lost',
+          profit,
+        }, ...prev])
+
         send({ balance: 1 })
 
         if (won) {
-          resetBotState()
-          setTimeout(() => placeNextTrade(), 500)
+          if (state.inRecovery && totalPnLRef.current < 0) {
+            // Still negative after win in recovery — continue recovery
+            handleRecovery()
+          } else {
+            // Positive or break even — reset to start
+            resetBotState()
+            setTimeout(() => placeNextTrade(), 500)
+          }
         } else {
-          handleLoss()
+          // Loss
+          if (!state.inRecovery) {
+            // First loss — flip to recovery
+            handleRecovery()
+          } else {
+            // Already in recovery and lost — double stake and continue
+            state.currentStake = state.currentStake * 2
+            setCurrentStake(state.currentStake)
+            setTimeout(() => placeNextTrade(), 500)
+          }
         }
       }
     })
@@ -173,87 +197,74 @@ export default function Bots() {
 
   const resetBotState = () => {
     const state = botStateRef.current
-    state.lossCount = 0
+    state.inRecovery = false
     state.currentStake = state.startingStake
     state.currentPrediction = state.startPrediction
     state.currentDigit = state.startDigit
     setCurrentStake(state.startingStake)
   }
 
-  const handleLoss = () => {
+  const handleRecovery = () => {
     const state = botStateRef.current
-    state.lossCount++
+    state.inRecovery = true
 
-    if (state.lossCount >= 3) {
-      resetBotState()
-      setTimeout(() => placeNextTrade(), 500)
-      return
+    // Flip prediction
+    if (state.activeBot === 'ou') {
+      state.currentPrediction = state.startPrediction === 'over' ? 'under' : 'over'
+      state.currentDigit = state.recoveryDigit
+    } else {
+      state.currentPrediction = state.startPrediction === 'even' ? 'odd' : 'even'
     }
 
-    // Loss 1: flip prediction and switch to recovery digit
-    if (state.lossCount === 1) {
-      if (state.activeBot === 'ou') {
-        state.currentPrediction = state.startPrediction === 'over' ? 'under' : 'over'
-        state.currentDigit = state.recoveryDigit
-      } else {
-        state.currentPrediction = state.startPrediction === 'even' ? 'odd' : 'even'
-      }
-    }
-
-    // Loss 2 and 3: double stake, keep same prediction and digit
-    if (state.lossCount >= 2) {
-      state.currentStake = state.currentStake * 2
-    }
-
+    // Keep same stake on first recovery flip
     setCurrentStake(state.currentStake)
     setTimeout(() => placeNextTrade(), 500)
   }
 
   const placeNextTrade = () => {
-  if (!botStateRef.current.running) return
-  if (pendingTradeRef.current) return
-  const state = botStateRef.current
+    if (!botStateRef.current.running) return
+    if (pendingTradeRef.current) return
+    const state = botStateRef.current
 
-  pendingTradeRef.current = true
+    pendingTradeRef.current = true
 
-  // Safety timeout - if trade takes more than 30s, unblock
-  setTimeout(() => {
-    if (pendingTradeRef.current) {
-      pendingTradeRef.current = false
-      if (botStateRef.current.running) {
-        placeNextTrade()
+    // Safety timeout 30s
+    if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current)
+    pendingTimeoutRef.current = setTimeout(() => {
+      if (pendingTradeRef.current) {
+        pendingTradeRef.current = false
+        if (botStateRef.current.running) placeNextTrade()
       }
+    }, 30000)
+
+    let contractType = ''
+    let barrier = undefined
+
+    if (state.activeBot === 'ou') {
+      contractType = state.currentPrediction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
+      barrier = state.currentDigit
+    } else {
+      contractType = state.currentPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
     }
-  }, 30000)
 
-  let contractType = ''
-  let barrier = undefined
+    const payload: any = {
+      proposal: 1,
+      amount: state.currentStake,
+      basis: 'stake',
+      contract_type: contractType,
+      currency: 'USD',
+      duration: 1,
+      duration_unit: 't',
+      underlying_symbol: state.market,
+      subscribe: 1,
+    }
 
-  if (state.activeBot === 'ou') {
-    contractType = state.currentPrediction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
-    barrier = state.currentDigit
-  } else {
-    contractType = state.currentPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
+    if (barrier !== undefined) {
+      payload.barrier = barrier
+    }
+
+    send(payload)
   }
-
-  const payload: any = {
-    proposal: 1,
-    amount: state.currentStake,
-    basis: 'stake',
-    contract_type: contractType,
-    currency: 'USD',
-    duration: 1,
-    duration_unit: 't',
-    underlying_symbol: state.market,
-    subscribe: 1,
-  }
-
-  if (barrier !== undefined) {
-    payload.barrier = barrier
-  }
-
-  send(payload)
-}
 
   const startBot = () => {
     if (status !== 'open') {
@@ -263,7 +274,7 @@ export default function Bots() {
 
     const state = botStateRef.current
     state.running = true
-    state.lossCount = 0
+    state.inRecovery = false
     state.activeBot = activeBot
     state.market = market
 
@@ -287,6 +298,7 @@ export default function Bots() {
     }
 
     state.startingBalance = balance || 0
+    totalPnLRef.current = 0
     pendingTradeRef.current = false
     setBotRunning(true)
     setCurrentStake(state.currentStake)
@@ -299,7 +311,9 @@ export default function Bots() {
   const stopBot = (reason?: string) => {
     botStateRef.current.running = false
     botStateRef.current.startingBalance = 0
+    botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
+    if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current)
     setBotRunning(false)
     setBotMessage(reason || '⏹ Bot stopped')
   }
@@ -307,8 +321,10 @@ export default function Bots() {
   const resetBot = () => {
     botStateRef.current.running = false
     botStateRef.current.startingBalance = 0
-    botStateRef.current.lossCount = 0
+    botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
+    totalPnLRef.current = 0
+    if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current)
     setBotRunning(false)
     setTradeLogs([])
     setCurrentStake(0)
@@ -486,8 +502,8 @@ export default function Bots() {
               {tradeLogs.map(log => (
                 <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
                   <span style={{ color: '#fff', fontSize: '0.85rem' }}>{log.type} · ${log.stake.toFixed(2)}</span>
-                  <span style={{ color: log.result === 'won' ? '#22c55e' : log.result === 'lost' ? '#ef4444' : '#aaa', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                    {log.result === 'pending' ? '...' : log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
+                  <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                    {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
                   </span>
                 </div>
               ))}
