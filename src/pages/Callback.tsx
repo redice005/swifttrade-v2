@@ -40,7 +40,7 @@ export default function Callback() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#fff' }}>Authenticating...</p>
+      <p style={{ color: '#fff' }}>Swifttrade Loading...</p>
     </div>
   )
 }
