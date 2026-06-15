@@ -210,40 +210,50 @@ export default function Bots() {
   }
 
   const placeNextTrade = () => {
-    if (!botStateRef.current.running) return
-    if (pendingTradeRef.current) return
-    const state = botStateRef.current
+  if (!botStateRef.current.running) return
+  if (pendingTradeRef.current) return
+  const state = botStateRef.current
 
-    pendingTradeRef.current = true
+  pendingTradeRef.current = true
 
-    let contractType = ''
-    let barrier = undefined
-
-    if (state.activeBot === 'ou') {
-      contractType = state.currentPrediction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
-      barrier = state.currentDigit
-    } else {
-      contractType = state.currentPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
+  // Safety timeout - if trade takes more than 30s, unblock
+  setTimeout(() => {
+    if (pendingTradeRef.current) {
+      pendingTradeRef.current = false
+      if (botStateRef.current.running) {
+        placeNextTrade()
+      }
     }
+  }, 30000)
 
-    const payload: any = {
-      proposal: 1,
-      amount: state.currentStake,
-      basis: 'stake',
-      contract_type: contractType,
-      currency: 'USD',
-      duration: 1,
-      duration_unit: 't',
-      underlying_symbol: state.market,
-      subscribe: 1,
-    }
+  let contractType = ''
+  let barrier = undefined
 
-    if (barrier !== undefined) {
-      payload.barrier = barrier
-    }
-
-    send(payload)
+  if (state.activeBot === 'ou') {
+    contractType = state.currentPrediction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
+    barrier = state.currentDigit
+  } else {
+    contractType = state.currentPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
   }
+
+  const payload: any = {
+    proposal: 1,
+    amount: state.currentStake,
+    basis: 'stake',
+    contract_type: contractType,
+    currency: 'USD',
+    duration: 1,
+    duration_unit: 't',
+    underlying_symbol: state.market,
+    subscribe: 1,
+  }
+
+  if (barrier !== undefined) {
+    payload.barrier = barrier
+  }
+
+  send(payload)
+}
 
   const startBot = () => {
     if (status !== 'open') {
