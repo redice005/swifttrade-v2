@@ -21,6 +21,7 @@ export default function Analysis() {
     } catch { return 0 }
   })
   const [pulse, setPulse] = useState(false)
+  const [viewWindow, setViewWindow] = useState<10 | 20 | 50 | 100 | 500>(50)
 
   const { status, send, subscribe } = useDerivSocket(wsUrl)
   const token = localStorage.getItem('deriv_token')
@@ -40,7 +41,6 @@ export default function Analysis() {
     return () => clearInterval(interval)
   }, [token])
 
-  // Save digits + tickCount to localStorage whenever they change
   useEffect(() => {
     if (digits.length === 0) return
     localStorage.setItem(`digits_${market}`, JSON.stringify(digits))
@@ -50,7 +50,6 @@ export default function Analysis() {
   useEffect(() => {
     if (status !== 'open') return
 
-    // Load saved data for this market
     try {
       const saved = localStorage.getItem(`digits_${market}`)
       const savedCount = localStorage.getItem(`tickCount_${market}`)
@@ -84,11 +83,14 @@ export default function Analysis() {
     return () => { unsub() }
   }, [status, market])
 
+  // Use only the last N ticks based on viewWindow
+  const visibleDigits = digits.slice(-viewWindow)
+
   const getPercentages = () => {
-    if (digits.length === 0) return Array(10).fill(0)
+    if (visibleDigits.length === 0) return Array(10).fill(0)
     return Array.from({ length: 10 }, (_, i) => {
-      const count = digits.filter(d => d === i).length
-      return parseFloat(((count / digits.length) * 100).toFixed(1))
+      const count = visibleDigits.filter(d => d === i).length
+      return parseFloat(((count / visibleDigits.length) * 100).toFixed(1))
     })
   }
 
@@ -104,7 +106,7 @@ export default function Analysis() {
   }
 
   const percentages = getPercentages()
-  const hasEnoughData = digits.length >= 50
+  const hasEnoughData = visibleDigits.length >= viewWindow
   const maxPct = Math.max(...percentages)
   const minPct = Math.min(...percentages)
   const streak = getStreak()
@@ -124,6 +126,22 @@ export default function Analysis() {
         }
         .last-digit-pulse {
           animation: pulse-ring 0.6s ease-out;
+        }
+        .window-btn {
+          padding: 0.35rem 0.75rem;
+          border-radius: 20px;
+          border: 1px solid #333;
+          background: transparent;
+          color: #aaa;
+          font-size: 0.75rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .window-btn.active {
+          background: #6c63ff;
+          border-color: #6c63ff;
+          color: #fff;
+          font-weight: bold;
         }
       `}</style>
 
@@ -166,27 +184,28 @@ export default function Analysis() {
             {status === 'open' ? '🟢 Live' : '🔴 Connecting...'}
           </span>
           <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
-            {tickCount} ticks
+            {tickCount} ticks saved
           </span>
         </div>
+      </div>
 
-        {!hasEnoughData && tickCount > 0 && (
-          <div style={{
-            marginTop: '0.5rem',
-            background: '#2a2a1a',
-            border: '1px solid #554400',
-            borderRadius: '6px',
-            padding: '0.4rem 0.75rem',
-            fontSize: '0.75rem',
-            color: '#f59e0b',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <span>⏳ Collecting data for accurate stats</span>
-            <span style={{ fontWeight: 'bold' }}>{tickCount}/50</span>
-          </div>
-        )}
+      {/* Tick Window Selector */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem 1.5rem', marginBottom: '1rem' }}>
+        <p style={{ color: '#aaa', margin: '0 0 0.75rem', fontSize: '0.8rem' }}>ANALYSE LAST</p>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {([10, 20, 50, 100, 500] as const).map(n => (
+            <button
+              key={n}
+              className={`window-btn ${viewWindow === n ? 'active' : ''}`}
+              onClick={() => setViewWindow(n)}
+            >
+              {n === 500 ? 'All (500)' : `Last ${n}`}
+            </button>
+          ))}
+        </div>
+        <p style={{ color: '#555', margin: '0.5rem 0 0', fontSize: '0.72rem' }}>
+          Showing {Math.min(visibleDigits.length, viewWindow)} of {digits.length} saved ticks
+        </p>
       </div>
 
       {/* Last Digit — compact */}
@@ -230,7 +249,7 @@ export default function Analysis() {
 
       {/* Digit Circles */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>DIGIT DISTRIBUTION (last {digits.length} ticks)</p>
+        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>DIGIT DISTRIBUTION (last {visibleDigits.length} ticks)</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem', width: '100%' }}>
           {Array.from({ length: 10 }, (_, i) => {
             const pct = percentages[i]
@@ -318,7 +337,6 @@ export default function Analysis() {
           <span style={{ color: '#22c55e', fontSize: '0.75rem' }}>🟢 Most frequent</span>
           <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>🔴 Least frequent</span>
           <span style={{ color: '#6c63ff', fontSize: '0.75rem' }}>🟣 Last digit</span>
-          {!hasEnoughData && <span style={{ color: '#f59e0b', fontSize: '0.75rem' }}>⚠️ Need 50+ ticks for colors</span>}
         </div>
       </div>
     </div>
