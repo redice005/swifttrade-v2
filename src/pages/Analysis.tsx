@@ -10,6 +10,7 @@ export default function Analysis() {
   const [digits, setDigits] = useState<number[]>([])
   const [lastDigit, setLastDigit] = useState<number | null>(null)
   const [tickCount, setTickCount] = useState(0)
+  const [pulse, setPulse] = useState(false)
 
   const { status, send, subscribe } = useDerivSocket(wsUrl)
   const token = localStorage.getItem('deriv_token')
@@ -32,7 +33,6 @@ export default function Analysis() {
   useEffect(() => {
     if (status !== 'open') return
 
-    // Reset and subscribe to new market
     setDigits([])
     setLastDigit(null)
     setTickCount(0)
@@ -43,9 +43,11 @@ export default function Analysis() {
         const price = data.tick.quote
         const digit = parseInt(price.toString().slice(-1))
         setLastDigit(digit)
+        setPulse(true)
+        setTimeout(() => setPulse(false), 600)
         setDigits(prev => {
           const updated = [...prev, digit]
-          return updated.slice(-500) // keep last 500 ticks
+          return updated.slice(-500)
         })
         setTickCount(prev => prev + 1)
       }
@@ -56,7 +58,6 @@ export default function Analysis() {
     return () => { unsub() }
   }, [status, market])
 
-  // Calculate digit percentages
   const getPercentages = () => {
     if (digits.length === 0) return Array(10).fill(0)
     return Array.from({ length: 10 }, (_, i) => {
@@ -65,9 +66,22 @@ export default function Analysis() {
     })
   }
 
+  const getStreak = () => {
+    if (digits.length < 2) return null
+    const last = digits[digits.length - 1]
+    let count = 1
+    for (let i = digits.length - 2; i >= 0; i--) {
+      if (digits[i] === last) count++
+      else break
+    }
+    return count >= 2 ? { digit: last, count } : null
+  }
+
   const percentages = getPercentages()
+  const hasEnoughData = digits.length >= 50
   const maxPct = Math.max(...percentages)
   const minPct = Math.min(...percentages)
+  const streak = getStreak()
 
   const logout = () => {
     localStorage.removeItem('deriv_token')
@@ -76,6 +90,17 @@ export default function Analysis() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
+      <style>{`
+        @keyframes pulse-ring {
+          0% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.7); }
+          70% { box-shadow: 0 0 0 18px rgba(108, 99, 255, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0); }
+        }
+        .last-digit-pulse {
+          animation: pulse-ring 0.6s ease-out;
+        }
+      `}</style>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
         <button onClick={logout} style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Logout</button>
@@ -110,7 +135,7 @@ export default function Analysis() {
           </optgroup>
         </select>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem', alignItems: 'center' }}>
           <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
             {status === 'open' ? '🟢 Live' : '🔴 Connecting...'}
           </span>
@@ -118,25 +143,60 @@ export default function Analysis() {
             {tickCount} ticks
           </span>
         </div>
+
+        {!hasEnoughData && tickCount > 0 && (
+          <div style={{
+            marginTop: '0.5rem',
+            background: '#2a2a1a',
+            border: '1px solid #554400',
+            borderRadius: '6px',
+            padding: '0.4rem 0.75rem',
+            fontSize: '0.75rem',
+            color: '#f59e0b',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>⏳ Collecting data for accurate stats</span>
+            <span style={{ fontWeight: 'bold' }}>{tickCount}/50</span>
+          </div>
+        )}
       </div>
 
-      {/* Last Digit Display */}
+      {/* Last Digit — compact */}
       {lastDigit !== null && (
-        <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem', textAlign: 'center' }}>
-          <p style={{ color: '#aaa', margin: '0 0 0.5rem', fontSize: '0.8rem' }}>LAST DIGIT</p>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: '#6c63ff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto',
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            boxShadow: '0 0 20px rgba(108, 99, 255, 0.5)'
-          }}>
+        <div style={{
+          background: '#1a1a2e',
+          borderRadius: '12px',
+          padding: '0.75rem 1.5rem',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div>
+            <p style={{ color: '#aaa', margin: '0 0 0.2rem', fontSize: '0.75rem' }}>LAST DIGIT</p>
+            {streak && (
+              <p style={{ color: '#f59e0b', margin: 0, fontSize: '0.75rem' }}>
+                🔥 Digit {streak.digit} appeared {streak.count}x in a row
+              </p>
+            )}
+          </div>
+          <div
+            className={pulse ? 'last-digit-pulse' : ''}
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: '#6c63ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              boxShadow: '0 0 20px rgba(108, 99, 255, 0.5)',
+              flexShrink: 0
+            }}>
             {lastDigit}
           </div>
         </div>
@@ -145,38 +205,45 @@ export default function Analysis() {
       {/* Digit Circles */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>DIGIT DISTRIBUTION (last {digits.length} ticks)</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem', width: '100%' }}>
           {Array.from({ length: 10 }, (_, i) => {
             const pct = percentages[i]
-            const isHot = pct === maxPct
-            const isCold = pct === minPct
+            const isHot = hasEnoughData && pct === maxPct
+            const isCold = hasEnoughData && pct === minPct
             const isLast = lastDigit === i
-            const size = 50 + (pct / maxPct) * 30
+            const size = hasEnoughData ? 50 + (pct / (maxPct || 1)) * 20 : 54
+
+            let bgColor = '#1e1e3a'
+            if (isLast) bgColor = '#6c63ff'
+            else if (isHot) bgColor = '#22c55e'
+            else if (isCold) bgColor = '#ef4444'
+
+            let textColor = '#aaa'
+            if (isLast) textColor = '#6c63ff'
+            else if (isHot) textColor = '#22c55e'
+            else if (isCold) textColor = '#ef4444'
 
             return (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
                 <div style={{
                   width: `${size}px`,
                   height: `${size}px`,
                   borderRadius: '50%',
-                  background: isLast ? '#6c63ff' : isHot ? '#22c55e' : isCold ? '#ef4444' : '#0a0a1a',
+                  background: bgColor,
                   border: isLast ? '3px solid #fff' : '2px solid #333',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.2rem',
+                  fontSize: '1.1rem',
                   fontWeight: 'bold',
                   color: '#fff',
                   transition: 'all 0.3s ease',
-                  boxShadow: isLast ? '0 0 15px rgba(108, 99, 255, 0.7)' : 'none'
+                  boxShadow: isLast ? '0 0 15px rgba(108, 99, 255, 0.7)' : 'none',
+                  margin: '0 auto'
                 }}>
                   {i}
                 </div>
-                <span style={{
-                  color: isLast ? '#6c63ff' : isHot ? '#22c55e' : isCold ? '#ef4444' : '#aaa',
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold'
-                }}>
+                <span style={{ color: textColor, fontSize: '0.75rem', fontWeight: 'bold' }}>
                   {pct}%
                 </span>
               </div>
@@ -190,9 +257,19 @@ export default function Analysis() {
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>DIGIT BARS</p>
         {Array.from({ length: 10 }, (_, i) => {
           const pct = percentages[i]
-          const isHot = pct === maxPct
-          const isCold = pct === minPct
+          const isHot = hasEnoughData && pct === maxPct
+          const isCold = hasEnoughData && pct === minPct
           const isLast = lastDigit === i
+
+          let barColor = '#3d3d5c'
+          if (isLast) barColor = '#6c63ff'
+          else if (isHot) barColor = '#22c55e'
+          else if (isCold) barColor = '#ef4444'
+
+          let labelColor = '#aaa'
+          if (isLast) labelColor = '#6c63ff'
+          else if (isHot) labelColor = '#22c55e'
+          else if (isCold) labelColor = '#ef4444'
 
           return (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -201,26 +278,21 @@ export default function Analysis() {
                 <div style={{
                   width: `${pct}%`,
                   height: '100%',
-                  background: isLast ? '#6c63ff' : isHot ? '#22c55e' : isCold ? '#ef4444' : '#3d3d5c',
+                  background: barColor,
                   borderRadius: '4px',
                   transition: 'width 0.3s ease'
                 }} />
               </div>
-              <span style={{
-                color: isLast ? '#6c63ff' : isHot ? '#22c55e' : isCold ? '#ef4444' : '#aaa',
-                width: '45px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold'
-              }}>{pct}%</span>
+              <span style={{ color: labelColor, width: '45px', fontSize: '0.8rem', fontWeight: 'bold' }}>{pct}%</span>
             </div>
           )
         })}
 
-        {/* Legend */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
           <span style={{ color: '#22c55e', fontSize: '0.75rem' }}>🟢 Most frequent</span>
           <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>🔴 Least frequent</span>
           <span style={{ color: '#6c63ff', fontSize: '0.75rem' }}>🟣 Last digit</span>
+          {!hasEnoughData && <span style={{ color: '#f59e0b', fontSize: '0.75rem' }}>⚠️ Need 50+ ticks for colors</span>}
         </div>
       </div>
     </div>
