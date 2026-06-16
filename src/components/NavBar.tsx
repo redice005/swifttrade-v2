@@ -5,9 +5,9 @@ export default function NavBar() {
   const location = useLocation()
 
   const tabs = [
-    { label: '📈 Manual', path: '/dashboard' },
-    { label: '🤖 Bots', path: '/bots' },
-    { label: '🔢 Analysis', path: '/analysis' },
+    { label: ' Manual trading', path: '/dashboard' },
+    { label: ' Free Bots', path: '/bots' },
+    { label: ' Analysis', path: '/analysis' },
   ]
 
   return (
