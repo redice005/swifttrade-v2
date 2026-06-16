@@ -83,7 +83,6 @@ export default function Analysis() {
     return () => { unsub() }
   }, [status, market])
 
-  // Use only the last N ticks based on viewWindow
   const visibleDigits = digits.slice(-viewWindow)
 
   const getPercentages = () => {
@@ -143,6 +142,37 @@ export default function Analysis() {
           color: #fff;
           font-weight: bold;
         }
+        .digit-circle {
+          width: 52px;
+          height: 52px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.1rem;
+          font-weight: bold;
+          color: #fff;
+          transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+          margin: 0 auto;
+          flex-shrink: 0;
+        }
+        .digit-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 0.5rem;
+          width: 100%;
+        }
+        .digit-cell {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.35rem;
+        }
+        .digit-label {
+          font-size: 0.72rem;
+          font-weight: bold;
+          transition: color 0.3s ease;
+        }
       `}</style>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -172,7 +202,7 @@ export default function Analysis() {
             <option value="1HZ25V">Volatility 25 (1s)</option>
             <option value="1HZ30V">Volatility 30 (1s)</option>
             <option value="1HZ50V">Volatility 50 (1s)</option>
-            <option value="1HZ75V">Volatility 75 (1s)</option>
+            <option value="1HZ75">Volatility 75 (1s)</option>
             <option value="1HZ100V">Volatility 100 (1s)</option>
             <option value="1HZ150V">Volatility 150 (1s)</option>
             <option value="1HZ200V">Volatility 200 (1s)</option>
@@ -247,16 +277,17 @@ export default function Analysis() {
         </div>
       )}
 
-      {/* Digit Circles */}
+      {/* Digit Circles — fixed size, no bulge */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>DIGIT DISTRIBUTION (last {visibleDigits.length} ticks)</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem', width: '100%' }}>
+        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
+          DIGIT DISTRIBUTION (last {visibleDigits.length} ticks)
+        </p>
+        <div className="digit-grid">
           {Array.from({ length: 10 }, (_, i) => {
             const pct = percentages[i]
             const isHot = hasEnoughData && pct === maxPct
             const isCold = hasEnoughData && pct === minPct
             const isLast = lastDigit === i
-            const size = hasEnoughData ? 50 + (pct / (maxPct || 1)) * 20 : 54
 
             let bgColor = '#1e1e3a'
             if (isLast) bgColor = '#6c63ff'
@@ -269,26 +300,18 @@ export default function Analysis() {
             else if (isCold) textColor = '#ef4444'
 
             return (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
-                <div style={{
-                  width: `${size}px`,
-                  height: `${size}px`,
-                  borderRadius: '50%',
-                  background: bgColor,
-                  border: isLast ? '3px solid #fff' : '2px solid #333',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  color: '#fff',
-                  transition: 'all 0.3s ease',
-                  boxShadow: isLast ? '0 0 15px rgba(108, 99, 255, 0.7)' : 'none',
-                  margin: '0 auto'
-                }}>
+              <div key={i} className="digit-cell">
+                <div
+                  className="digit-circle"
+                  style={{
+                    background: bgColor,
+                    border: isLast ? '3px solid #fff' : '2px solid #333',
+                    boxShadow: isLast ? '0 0 15px rgba(108, 99, 255, 0.7)' : 'none',
+                  }}
+                >
                   {i}
                 </div>
-                <span style={{ color: textColor, fontSize: '0.75rem', fontWeight: 'bold' }}>
+                <span className="digit-label" style={{ color: textColor }}>
                   {pct}%
                 </span>
               </div>
