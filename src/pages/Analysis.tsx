@@ -7,9 +7,19 @@ export default function Analysis() {
   const [accountType] = useState<'demo' | 'real'>('demo')
   const [wsUrl, setWsUrl] = useState<string | null>(null)
   const [market, setMarket] = useState('R_100')
-  const [digits, setDigits] = useState<number[]>([])
+  const [digits, setDigits] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('digits_R_100')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
   const [lastDigit, setLastDigit] = useState<number | null>(null)
-  const [tickCount, setTickCount] = useState(0)
+  const [tickCount, setTickCount] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('tickCount_R_100')
+      return saved ? parseInt(saved) : 0
+    } catch { return 0 }
+  })
   const [pulse, setPulse] = useState(false)
 
   const { status, send, subscribe } = useDerivSocket(wsUrl)
@@ -30,12 +40,28 @@ export default function Analysis() {
     return () => clearInterval(interval)
   }, [token])
 
+  // Save digits + tickCount to localStorage whenever they change
+  useEffect(() => {
+    if (digits.length === 0) return
+    localStorage.setItem(`digits_${market}`, JSON.stringify(digits))
+    localStorage.setItem(`tickCount_${market}`, tickCount.toString())
+  }, [digits, tickCount, market])
+
   useEffect(() => {
     if (status !== 'open') return
 
-    setDigits([])
+    // Load saved data for this market
+    try {
+      const saved = localStorage.getItem(`digits_${market}`)
+      const savedCount = localStorage.getItem(`tickCount_${market}`)
+      setDigits(saved ? JSON.parse(saved) : [])
+      setTickCount(savedCount ? parseInt(savedCount) : 0)
+    } catch {
+      setDigits([])
+      setTickCount(0)
+    }
+
     setLastDigit(null)
-    setTickCount(0)
     currentMarketRef.current = market
 
     const unsub = subscribe((data) => {
