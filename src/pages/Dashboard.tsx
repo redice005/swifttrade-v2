@@ -15,6 +15,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (status !== 'open') return
+    let activeContractId: number | null = null
     const unsub = subscribe((data) => {
       if (data.msg_type === 'tick') {
         setCurrentPrice(data.tick.quote)
@@ -32,11 +33,13 @@ export default function Dashboard() {
           setMessage(`Error: ${data.error.message}`)
           setLoading(false)
         } else {
+          activeContractId = data.buy.contract_id
           send({ proposal_open_contract: 1, subscribe: 1, contract_id: data.buy.contract_id })
         }
       }
       if (data.msg_type === 'proposal_open_contract') {
         const contract = data.proposal_open_contract
+        if (contract.contract_id !== activeContractId) return
         if (contract.status === 'won') {
           setMessage(`✅ Won! Profit: +${contract.profit} ${currency}`)
           setLoading(false)
