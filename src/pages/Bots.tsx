@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import NavBar from '@/components/NavBar'
-import { useDerivSocket } from '@/hooks/useDerivSocket'
-import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
+import { useDeriv } from '@/context/DerivContext'
 
 type TradeLog = {
   id: number
@@ -13,10 +12,6 @@ type TradeLog = {
 
 export default function Bots() {
   const [activeBot, setActiveBot] = useState<'ou' | 'eo'>('ou')
-  const [accountType, setAccountType] = useState<'demo' | 'real'>('demo')
-  const [balance, setBalance] = useState<number | null>(null)
-  const [currency, setCurrency] = useState('USD')
-  const [wsUrl, setWsUrl] = useState<string | null>(null)
   const [botRunning, setBotRunning] = useState(false)
   const [tradeLogs, setTradeLogs] = useState<TradeLog[]>([])
   const [currentStake, setCurrentStake] = useState<number>(0)
@@ -57,26 +52,11 @@ export default function Bots() {
     market: 'R_100',
   })
 
-  const { status, send, subscribe } = useDerivSocket(wsUrl)
-  const token = localStorage.getItem('deriv_token')
-
-  useEffect(() => {
-    if (!token) return
-    const connect = async () => {
-      const accs = await getDerivAccounts(token)
-      if (!accs || accs.length === 0) return
-      const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
-      const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
-      setWsUrl(url)
-    }
-    connect()
-    const interval = setInterval(connect, 50000)
-    return () => clearInterval(interval)
-  }, [token, accountType])
+  const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
 
   useEffect(() => {
     if (status !== 'open') return
-    
+
     // If bot was running and WS reconnected, resume
     if (botStateRef.current.running && !pendingTradeRef.current) {
       setTimeout(() => placeNextTrade(), 1000)
@@ -84,8 +64,6 @@ export default function Bots() {
 
     const unsub = subscribe((data) => {
       if (data.msg_type === 'balance') {
-        setBalance(data.balance.balance)
-        setCurrency(data.balance.currency)
         const state = botStateRef.current
         if (state.running && state.startingBalance > 0) {
           const diff = data.balance.balance - state.startingBalance
@@ -167,7 +145,6 @@ export default function Bots() {
       }
     })
 
-    send({ balance: 1, subscribe: 1 })
     return () => { unsub() }
   }, [status])
 

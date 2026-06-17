@@ -1,44 +1,21 @@
 import { useState, useEffect } from 'react'
-import { useDerivSocket } from '@/hooks/useDerivSocket'
-import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
+import { useDeriv } from '@/context/DerivContext'
 import NavBar from '@/components/NavBar'
 
 export default function Dashboard() {
-  const [accountType, setAccountType] = useState<'demo' | 'real'>('demo')
-  const [balance, setBalance] = useState<number | null>(null)
-  const [currency, setCurrency] = useState('USD')
+  const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
   const [market, setMarket] = useState('R_100')
   const [stake, setStake] = useState('10')
   const [duration, setDuration] = useState('5')
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [wsUrl, setWsUrl] = useState<string | null>(null)
-  const [accounts, setAccounts] = useState<any[]>([])
   const [contractCategory, setContractCategory] = useState('rise_fall')
   const [barrier, setBarrier] = useState('5')
-
-  const { status, send, subscribe } = useDerivSocket(wsUrl)
-  const token = localStorage.getItem('deriv_token')
-
-  useEffect(() => {
-    if (!token) return
-    getDerivAccounts(token).then(async (accs) => {
-      if (!accs || accs.length === 0) return
-      setAccounts(accs)
-      const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
-      const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
-      setWsUrl(url)
-    })
-  }, [token, accountType])
 
   useEffect(() => {
     if (status !== 'open') return
     const unsub = subscribe((data) => {
-      if (data.msg_type === 'balance') {
-        setBalance(data.balance.balance)
-        setCurrency(data.balance.currency)
-      }
       if (data.msg_type === 'tick') {
         setCurrentPrice(data.tick.quote)
       }
@@ -69,7 +46,6 @@ export default function Dashboard() {
         }
       }
     })
-    send({ balance: 1, subscribe: 1 })
     send({ ticks: market, subscribe: 1 })
     return () => { unsub() }
   }, [status, market])
@@ -102,14 +78,14 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
-      
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
         <button onClick={logout} style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Logout</button>
       </div>
-      <NavBar /> 
-      
+      <NavBar />
+
       {/* Balance Card */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
