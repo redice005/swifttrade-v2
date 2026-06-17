@@ -6,7 +6,7 @@ type TradeLog = {
   id: number
   type: string
   stake: number
-  result: 'won' | 'lost' | 'pending'
+  result: 'won' | 'lost'
   profit: number
 }
 
@@ -20,31 +20,35 @@ export default function Bots() {
   const [totalPnL, setTotalPnL] = useState(0)
   const tradeIdRef = useRef(0)
   const pendingTradeRef = useRef(false)
+  const totalPnLRef = useRef(0)
+  const pendingLabelRef = useRef('')
+  const pendingStakeRef = useRef(0)
+  const activeContractIdRef = useRef<number | null>(null)
 
   // OU Bot settings
-  const [ouStartPrediction, setOuStartPrediction] = useState<'over' | 'under'>('over')
-  const [ouStartDigit, setOuStartDigit] = useState('1')
-  const [ouRecoveryDigit, setOuRecoveryDigit] = useState('6')
+  const [ouDirection, setOuDirection] = useState<'over' | 'under'>('over')
+  const [ouDigit1, setOuDigit1] = useState('1')
+  const [ouDigit2, setOuDigit2] = useState('3')
   const [ouStake, setOuStake] = useState('1')
   const [ouStopLoss, setOuStopLoss] = useState('10')
   const [ouTakeProfit, setOuTakeProfit] = useState('10')
 
   // EO Bot settings
-  const [eoStartPrediction, setEoStartPrediction] = useState<'even' | 'odd'>('even')
+  const [eoPrediction, setEoPrediction] = useState<'even' | 'odd'>('even')
   const [eoStake, setEoStake] = useState('1')
   const [eoStopLoss, setEoStopLoss] = useState('10')
   const [eoTakeProfit, setEoTakeProfit] = useState('10')
 
   const botStateRef = useRef({
     running: false,
-    lossCount: 0,
+    inRecovery: false,
     currentStake: 1,
     startingStake: 1,
-    startPrediction: 'over' as string,
-    currentPrediction: 'over' as string,
+    direction: 'over' as string,
+    digit1: '1',
+    digit2: '3',
     currentDigit: '1',
-    startDigit: '1',
-    recoveryDigit: '6',
+    eoPrediction: 'even' as string,
     stopLoss: 10,
     takeProfit: 10,
     startingBalance: 0,
@@ -54,10 +58,12 @@ export default function Bots() {
 
   const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
 
+  // Speed: 1s indices trade faster (shorter delay), others slightly slower
+  const getDelay = (mkt: string) => mkt.includes('1HZ') ? 300 : 700
+
   useEffect(() => {
     if (status !== 'open') return
 
-    // If bot was running and WS reconnected, resume
     if (botStateRef.current.running && !pendingTradeRef.current) {
       setTimeout(() => placeNextTrade(), 1000)
     }
@@ -81,9 +87,10 @@ export default function Bots() {
       if (data.msg_type === 'proposal') {
         if (!botStateRef.current.running) return
         if (data.error) {
-          setBotMessage(`Error: ${data.error.message}`)
           pendingTradeRef.current = false
-          stopBot('Error occurred')
+          setTimeout(() => {
+            if (botStateRef.current.running) placeNextTrade()
+          }, 2000)
           return
         }
         send({ buy: data.proposal.id, price: botStateRef.current.currentStake })
@@ -91,35 +98,31 @@ export default function Bots() {
 
       if (data.msg_type === 'buy') {
         if (data.error) {
-          setBotMessage(`Error: ${data.error.message}`)
           pendingTradeRef.current = false
-          stopBot('Error occurred')
+          setTimeout(() => {
+            if (botStateRef.current.running) placeNextTrade()
+          }, 2000)
           return
         }
         const contractId = data.buy.contract_id
-        const logId = ++tradeIdRef.current
+        activeContractIdRef.current = contractId
         const state = botStateRef.current
 
-        // Build label with digit
         let label = ''
         if (state.activeBot === 'ou') {
-          label = `${state.currentPrediction.toUpperCase()} ${state.currentDigit}`
+          label = `${state.direction.toUpperCase()} ${state.currentDigit}`
         } else {
-          label = state.currentPrediction.toUpperCase()
+          label = state.eoPrediction.toUpperCase()
         }
+        pendingLabelRef.current = label
+        pendingStakeRef.current = state.currentStake
 
-        setTradeLogs(prev => [{
-          id: logId,
-          type: label,
-          stake: state.currentStake,
-          result: 'pending',
-          profit: 0,
-        }, ...prev])
         send({ proposal_open_contract: 1, subscribe: 1, contract_id: contractId })
       }
 
       if (data.msg_type === 'proposal_open_contract') {
         const contract = data.proposal_open_contract
+        if (contract.contract_id !== activeContractIdRef.current) return
         if (contract.status !== 'won' && contract.status !== 'lost') return
         if (!botStateRef.current.running) return
 
@@ -127,18 +130,26 @@ export default function Bots() {
         const profit = won ? parseFloat(contract.profit) : -parseFloat(contract.buy_price)
         pendingTradeRef.current = false
 
-        setTradeLogs(prev => prev.map(log =>
-          log.id === tradeIdRef.current
-            ? { ...log, result: won ? 'won' : 'lost', profit }
-            : log
-        ))
+        const logId = ++tradeIdRef.current
+        setTradeLogs(prev => [{
+          id: logId,
+          type: pendingLabelRef.current,
+          stake: pendingStakeRef.current,
+          result: won ? 'won' : 'lost',
+          profit,
+        }, ...prev])
 
-        setTotalPnL(prev => prev + profit)
+        totalPnLRef.current = totalPnLRef.current + profit
+        setTotalPnL(totalPnLRef.current)
         send({ balance: 1 })
 
         if (won) {
-          resetBotState()
-          setTimeout(() => placeNextTrade(), 500)
+          if (botStateRef.current.inRecovery && totalPnLRef.current < 0) {
+            handleLoss()
+          } else {
+            resetBotState()
+            setTimeout(() => placeNextTrade(), getDelay(botStateRef.current.market))
+          }
         } else {
           handleLoss()
         }
@@ -150,87 +161,78 @@ export default function Bots() {
 
   const resetBotState = () => {
     const state = botStateRef.current
-    state.lossCount = 0
+    state.inRecovery = false
     state.currentStake = state.startingStake
-    state.currentPrediction = state.startPrediction
-    state.currentDigit = state.startDigit
+    state.currentDigit = state.digit1
     setCurrentStake(state.startingStake)
   }
 
   const handleLoss = () => {
     const state = botStateRef.current
-    state.lossCount++
 
-    if (state.lossCount >= 3) {
-      resetBotState()
-      setTimeout(() => placeNextTrade(), 500)
-      return
-    }
-
-    // Loss 1: flip prediction and switch to recovery digit
-    if (state.lossCount === 1) {
-      if (state.activeBot === 'ou') {
-        state.currentPrediction = state.startPrediction === 'over' ? 'under' : 'over'
-        state.currentDigit = state.recoveryDigit
+    if (state.activeBot === 'ou') {
+      if (!state.inRecovery) {
+        // First loss — switch to digit2, same stake, same direction
+        state.inRecovery = true
+        state.currentDigit = state.digit2
       } else {
-        state.currentPrediction = state.startPrediction === 'even' ? 'odd' : 'even'
+        // Already in recovery — multiply stake by 1.5, keep digit2
+        state.currentStake = parseFloat((state.currentStake * 1.5).toFixed(2))
       }
-    }
-
-    // Loss 2 and 3: double stake, keep same prediction and digit
-    if (state.lossCount >= 2) {
-      state.currentStake = state.currentStake * 2
+    } else {
+      // EO bot — no flipping, just increase stake by 1.5x, same prediction
+      state.inRecovery = true
+      state.currentStake = parseFloat((state.currentStake * 1.5).toFixed(2))
     }
 
     setCurrentStake(state.currentStake)
-    setTimeout(() => placeNextTrade(), 500)
+    setTimeout(() => placeNextTrade(), getDelay(state.market))
   }
 
   const placeNextTrade = () => {
-  if (!botStateRef.current.running) return
-  if (pendingTradeRef.current) return
-  const state = botStateRef.current
+    if (!botStateRef.current.running) return
+    if (pendingTradeRef.current) return
+    const state = botStateRef.current
 
-  pendingTradeRef.current = true
+    pendingTradeRef.current = true
 
-  // Safety timeout - if trade takes more than 30s, unblock
-  setTimeout(() => {
-    if (pendingTradeRef.current) {
-      pendingTradeRef.current = false
-      if (botStateRef.current.running) {
-        placeNextTrade()
+    setTimeout(() => {
+      if (pendingTradeRef.current) {
+        pendingTradeRef.current = false
+        if (botStateRef.current.running) {
+          placeNextTrade()
+        }
       }
+    }, 30000)
+
+    let contractType = ''
+    let barrier = undefined
+
+    if (state.activeBot === 'ou') {
+      contractType = state.direction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
+      barrier = state.currentDigit
+    } else {
+      contractType = state.eoPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
     }
-  }, 30000)
 
-  let contractType = ''
-  let barrier = undefined
+    const payload: any = {
+      proposal: 1,
+      amount: state.currentStake,
+      basis: 'stake',
+      contract_type: contractType,
+      currency: 'USD',
+      duration: 1,
+      duration_unit: 't',
+      underlying_symbol: state.market,
+      subscribe: 1,
+    }
 
-  if (state.activeBot === 'ou') {
-    contractType = state.currentPrediction === 'over' ? 'DIGITOVER' : 'DIGITUNDER'
-    barrier = state.currentDigit
-  } else {
-    contractType = state.currentPrediction === 'even' ? 'DIGITEVEN' : 'DIGITODD'
+    if (barrier !== undefined) {
+      payload.barrier = barrier
+    }
+
+    send(payload)
   }
-
-  const payload: any = {
-    proposal: 1,
-    amount: state.currentStake,
-    basis: 'stake',
-    contract_type: contractType,
-    currency: 'USD',
-    duration: 1,
-    duration_unit: 't',
-    underlying_symbol: state.market,
-    subscribe: 1,
-  }
-
-  if (barrier !== undefined) {
-    payload.barrier = barrier
-  }
-
-  send(payload)
-}
 
   const startBot = () => {
     if (status !== 'open') {
@@ -240,30 +242,29 @@ export default function Bots() {
 
     const state = botStateRef.current
     state.running = true
-    state.lossCount = 0
+    state.inRecovery = false
     state.activeBot = activeBot
     state.market = market
 
     if (activeBot === 'ou') {
       state.startingStake = parseFloat(ouStake)
       state.currentStake = parseFloat(ouStake)
-      state.startPrediction = ouStartPrediction
-      state.currentPrediction = ouStartPrediction
-      state.startDigit = ouStartDigit
-      state.recoveryDigit = ouRecoveryDigit
-      state.currentDigit = ouStartDigit
+      state.direction = ouDirection
+      state.digit1 = ouDigit1
+      state.digit2 = ouDigit2
+      state.currentDigit = ouDigit1
       state.stopLoss = parseFloat(ouStopLoss)
       state.takeProfit = parseFloat(ouTakeProfit)
     } else {
       state.startingStake = parseFloat(eoStake)
       state.currentStake = parseFloat(eoStake)
-      state.startPrediction = eoStartPrediction
-      state.currentPrediction = eoStartPrediction
+      state.eoPrediction = eoPrediction
       state.stopLoss = parseFloat(eoStopLoss)
       state.takeProfit = parseFloat(eoTakeProfit)
     }
 
     state.startingBalance = balance || 0
+    totalPnLRef.current = 0
     pendingTradeRef.current = false
     setBotRunning(true)
     setCurrentStake(state.currentStake)
@@ -276,6 +277,7 @@ export default function Bots() {
   const stopBot = (reason?: string) => {
     botStateRef.current.running = false
     botStateRef.current.startingBalance = 0
+    botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
     setBotRunning(false)
     setBotMessage(reason || '⏹ Bot stopped')
@@ -284,8 +286,9 @@ export default function Bots() {
   const resetBot = () => {
     botStateRef.current.running = false
     botStateRef.current.startingBalance = 0
-    botStateRef.current.lossCount = 0
+    botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
+    totalPnLRef.current = 0
     setBotRunning(false)
     setTradeLogs([])
     setCurrentStake(0)
@@ -365,10 +368,10 @@ export default function Bots() {
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <button onClick={() => setActiveBot('ou')}
           style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: 'none', background: activeBot === 'ou' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
-          Swift Recovery OU</button>
+          Wealth Generator OU</button>
         <button onClick={() => setActiveBot('eo')}
           style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: 'none', background: activeBot === 'eo' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
-          Swift Recovery EO</button>
+          Wealth Generator EO</button>
       </div>
 
       {/* Main Layout */}
@@ -378,22 +381,22 @@ export default function Bots() {
         <div style={{ flex: 1, background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
           {activeBot === 'ou' ? (
             <>
-              <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>🤖 Swift Recovery OU</h3>
-              <p style={labelStyle}>Starting Prediction</p>
+              <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>🤖 Wealth Generator OU</h3>
+              <p style={labelStyle}>Direction</p>
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <button onClick={() => setOuStartPrediction('over')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouStartPrediction === 'over' ? '#22c55e' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                <button onClick={() => setOuDirection('over')}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'over' ? '#22c55e' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                   Over</button>
-                <button onClick={() => setOuStartPrediction('under')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouStartPrediction === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                <button onClick={() => setOuDirection('under')}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                   Under</button>
               </div>
-              <p style={labelStyle}>Starting Digit (0-9)</p>
-              <select value={ouStartDigit} onChange={e => setOuStartDigit(e.target.value)} style={inputStyle}>
+              <p style={labelStyle}>First Digit (0-9)</p>
+              <select value={ouDigit1} onChange={e => setOuDigit1(e.target.value)} style={inputStyle}>
                 {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
-              <p style={labelStyle}>Recovery Digit (0-9)</p>
-              <select value={ouRecoveryDigit} onChange={e => setOuRecoveryDigit(e.target.value)} style={inputStyle}>
+              <p style={labelStyle}>Second Digit (0-9)</p>
+              <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
                 {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
               </select>
               <p style={labelStyle}>Starting Stake (USD)</p>
@@ -405,14 +408,14 @@ export default function Bots() {
             </>
           ) : (
             <>
-              <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>🤖 Swift Recovery EO</h3>
-              <p style={labelStyle}>Starting Prediction</p>
+              <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>🤖 Wealth Generator EO</h3>
+              <p style={labelStyle}>Prediction</p>
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <button onClick={() => setEoStartPrediction('even')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoStartPrediction === 'even' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                <button onClick={() => setEoPrediction('even')}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'even' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                   Even</button>
-                <button onClick={() => setEoStartPrediction('odd')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoStartPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                <button onClick={() => setEoPrediction('odd')}
+                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                   Odd</button>
               </div>
               <p style={labelStyle}>Starting Stake (USD)</p>
@@ -463,13 +466,12 @@ export default function Bots() {
               {tradeLogs.map(log => (
                 <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
                   <span style={{ color: '#fff', fontSize: '0.85rem' }}>{log.type} · ${log.stake.toFixed(2)}</span>
-                  <span style={{ color: log.result === 'won' ? '#22c55e' : log.result === 'lost' ? '#ef4444' : '#aaa', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                    {log.result === 'pending' ? '...' : log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
+                  <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                    {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
                   </span>
                 </div>
               ))}
 
-              {/* P&L Summary */}
               <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#0a0a1a', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Total P&L</span>
