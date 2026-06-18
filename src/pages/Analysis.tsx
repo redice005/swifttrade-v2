@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import NavBar from '@/components/NavBar'
-import { useDerivSocket } from '@/hooks/useDerivSocket'
-import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
+import { useDeriv } from '@/context/DerivContext'
 
 export default function Analysis() {
-  const [accountType] = useState<'demo' | 'real'>('demo')
-  const [wsUrl, setWsUrl] = useState<string | null>(null)
   const [market, setMarket] = useState('R_100')
   const [digits, setDigits] = useState<number[]>(() => {
     try {
@@ -23,23 +20,8 @@ export default function Analysis() {
   const [pulse, setPulse] = useState(false)
   const [viewWindow, setViewWindow] = useState<10 | 20 | 50 | 100 | 500>(50)
 
-  const { status, send, subscribe } = useDerivSocket(wsUrl)
-  const token = localStorage.getItem('deriv_token')
+  const { status, send, subscribe } = useDeriv()
   const currentMarketRef = useRef(market)
-
-  useEffect(() => {
-    if (!token) return
-    const connect = async () => {
-      const accs = await getDerivAccounts(token)
-      if (!accs || accs.length === 0) return
-      const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
-      const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
-      setWsUrl(url)
-    }
-    connect()
-    const interval = setInterval(connect, 50000)
-    return () => clearInterval(interval)
-  }, [token])
 
   useEffect(() => {
     if (digits.length === 0) return
@@ -202,7 +184,7 @@ export default function Analysis() {
             <option value="1HZ25V">Volatility 25 (1s)</option>
             <option value="1HZ30V">Volatility 30 (1s)</option>
             <option value="1HZ50V">Volatility 50 (1s)</option>
-            <option value="1HZ75">Volatility 75 (1s)</option>
+            <option value="1HZ75V">Volatility 75 (1s)</option>
             <option value="1HZ100V">Volatility 100 (1s)</option>
             <option value="1HZ150V">Volatility 150 (1s)</option>
             <option value="1HZ200V">Volatility 200 (1s)</option>
@@ -212,9 +194,6 @@ export default function Analysis() {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem', alignItems: 'center' }}>
           <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
             {status === 'open' ? '🟢 Live' : '🔴 Connecting...'}
-          </span>
-          <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
-            {tickCount} ticks saved
           </span>
         </div>
       </div>
@@ -229,7 +208,7 @@ export default function Analysis() {
               className={`window-btn ${viewWindow === n ? 'active' : ''}`}
               onClick={() => setViewWindow(n)}
             >
-              {n === 500 ? 'All (500)' : `Last ${n}`}
+              {n}
             </button>
           ))}
         </div>
