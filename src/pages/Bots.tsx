@@ -69,21 +69,6 @@ export default function Bots() {
     }
 
     const unsub = subscribe((data) => {
-      if (data.msg_type === 'balance') {
-        const state = botStateRef.current
-        if (state.running && state.startingBalance > 0) {
-          const diff = data.balance.balance - state.startingBalance
-          if (diff <= -state.stopLoss) {
-            stopBot('🛑 Stop Loss reached!')
-            return
-          }
-          if (diff >= state.takeProfit) {
-            stopBot('🎯 Take Profit reached!')
-            return
-          }
-        }
-      }
-
       if (data.msg_type === 'proposal') {
         if (!botStateRef.current.running) return
         if (data.error) {
@@ -143,12 +128,25 @@ export default function Bots() {
         setTotalPnL(totalPnLRef.current)
         send({ balance: 1 })
 
+        const state = botStateRef.current
+
+        // SL/TP now checked against the bot's own tracked P&L,
+        // not raw account balance drift (fixes premature SL/TP triggers)
+        if (totalPnLRef.current <= -state.stopLoss) {
+          stopBot('🛑 Stop Loss reached!')
+          return
+        }
+        if (totalPnLRef.current >= state.takeProfit) {
+          stopBot('🎯 Take Profit reached!')
+          return
+        }
+
         if (won) {
-          if (botStateRef.current.inRecovery && totalPnLRef.current < 0) {
+          if (state.inRecovery && totalPnLRef.current < 0) {
             handleLoss()
           } else {
             resetBotState()
-            setTimeout(() => placeNextTrade(), getDelay(botStateRef.current.market))
+            setTimeout(() => placeNextTrade(), getDelay(state.market))
           }
         } else {
           handleLoss()
@@ -236,7 +234,7 @@ export default function Bots() {
 
   const startBot = () => {
     if (status !== 'open') {
-      setBotMessage('WebSocket not connected!')
+      setBotMessage('⏳ Connecting... please try again in a moment')
       return
     }
 
