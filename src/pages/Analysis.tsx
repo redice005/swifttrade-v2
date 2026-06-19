@@ -212,9 +212,6 @@ export default function Analysis() {
             </button>
           ))}
         </div>
-        <p style={{ color: '#555', margin: '0.5rem 0 0', fontSize: '0.72rem' }}>
-          Showing {Math.min(visibleDigits.length, viewWindow)} of {digits.length} saved ticks
-        </p>
       </div>
 
       {/* Last Digit — compact */}
