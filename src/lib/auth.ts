@@ -1,5 +1,5 @@
 export const DERIV_CLIENT_ID = '33wc03nEpY39kVkVR3s62'
-export const REDIRECT_URI = 'https://swifttrade-v2.vercel.app/callback'
+export const REDIRECT_URI = 'https://swifttrade.pro/callback'
 
 export async function loginWithDeriv() {
   const array = crypto.getRandomValues(new Uint8Array(64))
