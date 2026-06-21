@@ -50,7 +50,7 @@ export default function Login() {
 
         {/* Feature pills */}
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
-          {['📈 Manual Trading', '🤖 Smart Bots', '🔢 Live Analysis'].map((f, i) => (
+          {['📈 Manual Trading', ' Smart Bots', ' Live Analysis'].map((f, i) => (
             <span key={i} style={{ background: 'rgba(108, 99, 255, 0.15)', border: '1px solid rgba(108, 99, 255, 0.3)', borderRadius: '20px', padding: '0.25rem 0.75rem', fontSize: '0.7rem', color: '#aaa' }}>{f}</span>
           ))}
         </div>
@@ -59,7 +59,7 @@ export default function Login() {
           onClick={loginWithDeriv}
           style={{ width: '100%', padding: '1rem', background: 'linear-gradient(135deg, #6c63ff, #8b5cf6)', color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold', marginBottom: '1rem', boxShadow: '0 4px 15px rgba(108, 99, 255, 0.4)' }}
         >
-          Login with Deriv
+          Login
         </button>
 
         <div style={{ border: '1px solid #222', borderRadius: '10px', padding: '1rem' }}>
