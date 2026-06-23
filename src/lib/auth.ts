@@ -17,7 +17,8 @@ export async function loginWithDeriv() {
     .reduce((s, b) => s + b.toString(16).padStart(2, '0'), '')
 
   sessionStorage.setItem('pkce_code_verifier', codeVerifier)
-  sessionStorage.setItem('oauth_state', state)
+sessionStorage.setItem('oauth_state', state)
+localStorage.setItem('pkce_code_verifier', codeVerifier)
 
   const url = `https://auth.deriv.com/oauth2/auth?response_type=code&client_id=${DERIV_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=trade+account_manage&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`
 
