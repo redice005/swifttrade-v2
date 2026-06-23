@@ -8,19 +8,17 @@ export default function Callback() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
-    const state = params.get('state')
-    const storedState = sessionStorage.getItem('oauth_state')
-    const codeVerifier = sessionStorage.getItem('pkce_code_verifier')
+    const codeVerifier = sessionStorage.getItem('pkce_code_verifier') || localStorage.getItem('pkce_code_verifier')
 
-    if (!code || state !== storedState) {
+    if (!code) {
       navigate('/login')
       return
     }
 
     sessionStorage.removeItem('oauth_state')
     sessionStorage.removeItem('pkce_code_verifier')
+    localStorage.removeItem('pkce_code_verifier')
 
-    // Exchange code for token via Vercel serverless function
     fetch('/api/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
