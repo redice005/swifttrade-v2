@@ -24,18 +24,28 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   const { status, send, subscribe } = useDerivSocket(wsUrl)
 
   useEffect(() => {
-    if (!token) return
-    const connect = async () => {
-      const accs = await getDerivAccounts(token)
-      if (!accs || accs.length === 0) return
-      const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
-      const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
-      setWsUrl(url)
+  if (!token) return
+  const connect = async () => {
+    const accs = await getDerivAccounts(token)
+    if (!accs || accs.length === 0) {
+      // token is invalid/expired — clear it so the user can log in again
+      localStorage.removeItem('deriv_token')
+      window.location.href = '/login'
+      return
     }
-    connect()
-    const interval = setInterval(connect, 50000)
-    return () => clearInterval(interval)
-  }, [token, accountType])
+    const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
+    const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
+    if (!url) {
+      localStorage.removeItem('deriv_token')
+      window.location.href = '/login'
+      return
+    }
+    setWsUrl(url)
+  }
+  connect()
+  const interval = setInterval(connect, 50000)
+  return () => clearInterval(interval)
+}, [token, accountType])
 
   useEffect(() => {
     if (status !== 'open') return
