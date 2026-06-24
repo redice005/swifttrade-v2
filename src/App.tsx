@@ -18,6 +18,7 @@ function ProtectedRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/bots" element={<Bots />} />
         <Route path="/analysis" element={<Analysis />} />
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </DerivProvider>
   )
@@ -27,19 +28,13 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('deriv_token'))
 
   useEffect(() => {
-    // Listen for token changes across tabs
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'deriv_token') {
-        setToken(e.newValue)
-      }
+      if (e.key === 'deriv_token') setToken(e.newValue)
     }
-
-    // Also poll every second in case storage event doesn't fire
     const interval = setInterval(() => {
       const current = localStorage.getItem('deriv_token')
       setToken(prev => prev !== current ? current : prev)
-    }, 1000)
-
+    }, 500)
     window.addEventListener('storage', handleStorage)
     return () => {
       window.removeEventListener('storage', handleStorage)
@@ -50,6 +45,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/login" element={!token ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/callback" element={<Callback />} />
         <Route path="/*" element={<ProtectedRoutes />} />
