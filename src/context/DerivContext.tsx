@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useDerivSocket } from '@/hooks/useDerivSocket'
 import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
 
@@ -19,33 +19,49 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   const [wsUrl, setWsUrl] = useState<string | null>(null)
   const [balance, setBalance] = useState<number | null>(null)
   const [currency, setCurrency] = useState('USD')
+  const [token, setToken] = useState<string | null>(null)
 
-  const token = localStorage.getItem('deriv_token')
+  // Read token reactively — not just once at mount
+  useEffect(() => {
+    const t = localStorage.getItem('deriv_token')
+    if (!t) {
+      window.location.href = '/login'
+      return
+    }
+    setToken(t)
+  }, [])
+
   const { status, send, subscribe } = useDerivSocket(wsUrl)
 
   useEffect(() => {
-  if (!token) return
-  const connect = async () => {
-    const accs = await getDerivAccounts(token)
-    if (!accs || accs.length === 0) {
-      // token is invalid/expired — clear it so the user can log in again
-      localStorage.removeItem('deriv_token')
-      window.location.href = '/login'
-      return
+    if (!token) return
+
+    const connect = async () => {
+      try {
+        const accs = await getDerivAccounts(token)
+        if (!accs || accs.length === 0) {
+          localStorage.removeItem('deriv_token')
+          window.location.href = '/login'
+          return
+        }
+        const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
+        const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
+        if (!url) {
+          localStorage.removeItem('deriv_token')
+          window.location.href = '/login'
+          return
+        }
+        setWsUrl(url)
+      } catch {
+        localStorage.removeItem('deriv_token')
+        window.location.href = '/login'
+      }
     }
-    const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
-    const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
-    if (!url) {
-      localStorage.removeItem('deriv_token')
-      window.location.href = '/login'
-      return
-    }
-    setWsUrl(url)
-  }
-  connect()
-  const interval = setInterval(connect, 50000)
-  return () => clearInterval(interval)
-}, [token, accountType])
+
+    connect()
+    const interval = setInterval(connect, 50000)
+    return () => clearInterval(interval)
+  }, [token, accountType])
 
   useEffect(() => {
     if (status !== 'open') return
