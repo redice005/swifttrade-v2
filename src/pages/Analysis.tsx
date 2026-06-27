@@ -18,10 +18,11 @@ export default function Analysis() {
     } catch { return 0 }
   })
   const [pulse, setPulse] = useState(false)
-  const [viewWindow, setViewWindow] = useState<10 | 20 | 50 | 100 | 500>(50)
+  const [viewWindow, setViewWindow] = useState<10 | 20 | 50 | 100>(50)
 
   const { status, send, subscribe } = useDeriv()
   const currentMarketRef = useRef(market)
+  const loadedMarketsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     if (digits.length === 0) return
@@ -32,14 +33,20 @@ export default function Analysis() {
   useEffect(() => {
     if (status !== 'open') return
 
-    try {
-      const saved = localStorage.getItem(`digits_${market}`)
-      const savedCount = localStorage.getItem(`tickCount_${market}`)
-      setDigits(saved ? JSON.parse(saved) : [])
-      setTickCount(savedCount ? parseInt(savedCount) : 0)
-    } catch {
-      setDigits([])
-      setTickCount(0)
+    // Only load from storage the FIRST time we see this market this session —
+    // never wipe/reload on every reconnect, so history keeps accumulating
+    // continuously instead of resetting on login/logout.
+    if (!loadedMarketsRef.current.has(market)) {
+      try {
+        const saved = localStorage.getItem(`digits_${market}`)
+        const savedCount = localStorage.getItem(`tickCount_${market}`)
+        setDigits(saved ? JSON.parse(saved) : [])
+        setTickCount(savedCount ? parseInt(savedCount) : 0)
+      } catch {
+        setDigits([])
+        setTickCount(0)
+      }
+      loadedMarketsRef.current.add(market)
     }
 
     setLastDigit(null)
@@ -54,7 +61,7 @@ export default function Analysis() {
         setTimeout(() => setPulse(false), 600)
         setDigits(prev => {
           const updated = [...prev, digit]
-          return updated.slice(-500)
+          return updated.slice(-1000) // rolling cap raised to 1000
         })
         setTickCount(prev => prev + 1)
       }
@@ -68,6 +75,7 @@ export default function Analysis() {
   const resetAnalysis = () => {
     localStorage.removeItem(`digits_${market}`)
     localStorage.removeItem(`tickCount_${market}`)
+    loadedMarketsRef.current.delete(market)
     setDigits([])
     setTickCount(0)
     setLastDigit(null)
@@ -83,6 +91,16 @@ export default function Analysis() {
     })
   }
 
+  const getOverUnder = () => {
+    if (visibleDigits.length === 0) return { over: 0, under: 0 }
+    const overCount = visibleDigits.filter(d => d >= 5).length
+    const underCount = visibleDigits.length - overCount
+    return {
+      over: parseFloat(((overCount / visibleDigits.length) * 100).toFixed(1)),
+      under: parseFloat(((underCount / visibleDigits.length) * 100).toFixed(1)),
+    }
+  }
+
   const getStreak = () => {
     if (digits.length < 2) return null
     const last = digits[digits.length - 1]
@@ -95,6 +113,7 @@ export default function Analysis() {
   }
 
   const percentages = getPercentages()
+  const overUnder = getOverUnder()
   const hasEnoughData = visibleDigits.length >= viewWindow
   const maxPct = Math.max(...percentages)
   const minPct = Math.min(...percentages)
@@ -178,6 +197,23 @@ export default function Analysis() {
           background: #ef4444;
           color: #fff;
         }
+        .ou-bar-track {
+          display: flex;
+          width: 100%;
+          height: 28px;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #0a0a1a;
+        }
+        .ou-bar-segment {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          font-weight: bold;
+          color: #fff;
+          transition: width 0.3s ease;
+        }
       `}</style>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -228,7 +264,7 @@ export default function Analysis() {
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem 1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 0.75rem', fontSize: '0.8rem' }}>ANALYSE LAST</p>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {([10, 20, 50, 100, 500] as const).map(n => (
+          {([10, 20, 50, 100] as const).map(n => (
             <button
               key={n}
               className={`window-btn ${viewWindow === n ? 'active' : ''}`}
@@ -278,6 +314,29 @@ export default function Analysis() {
           </div>
         </div>
       )}
+
+      {/* Over 5 / Under 5 Summary — sits above the digit grid */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
+        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
+          OVER 5 / UNDER 5 (last {visibleDigits.length} ticks)
+        </p>
+        <div className="ou-bar-track">
+          <div className="ou-bar-segment" style={{ width: `${overUnder.under}%`, background: '#ef4444' }}>
+            {overUnder.under > 8 ? `${overUnder.under}%` : ''}
+          </div>
+          <div className="ou-bar-segment" style={{ width: `${overUnder.over}%`, background: '#22c55e' }}>
+            {overUnder.over > 8 ? `${overUnder.over}%` : ''}
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.6rem' }}>
+          <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            Under 5 (0-4): {overUnder.under}%
+          </span>
+          <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            Over 5 (5-9): {overUnder.over}%
+          </span>
+        </div>
+      </div>
 
       {/* Digit Circles — fixed size, no bulge */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
