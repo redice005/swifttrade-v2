@@ -4,7 +4,7 @@ import { useDeriv } from '@/context/DerivContext'
 
 type TradeLog = {
   id: number
-  type: string
+  digit: string
   stake: number
   result: 'won' | 'lost'
   profit: number
@@ -18,10 +18,11 @@ export default function Bots() {
   const [botMessage, setBotMessage] = useState('')
   const [market, setMarket] = useState('R_100')
   const [totalPnL, setTotalPnL] = useState(0)
+  const [showLog, setShowLog] = useState(false)
   const tradeIdRef = useRef(0)
   const pendingTradeRef = useRef(false)
   const totalPnLRef = useRef(0)
-  const pendingLabelRef = useRef('')
+  const pendingDigitRef = useRef('')
   const pendingStakeRef = useRef(0)
   const activeContractIdRef = useRef<number | null>(null)
 
@@ -58,7 +59,6 @@ export default function Bots() {
 
   const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
 
-  // Speed: 1s indices trade faster (shorter delay), others slightly slower
   const getDelay = (mkt: string) => mkt.includes('1HZ') ? 300 : 700
 
   useEffect(() => {
@@ -93,13 +93,8 @@ export default function Bots() {
         activeContractIdRef.current = contractId
         const state = botStateRef.current
 
-        let label = ''
-        if (state.activeBot === 'ou') {
-          label = `${state.direction.toUpperCase()} ${state.currentDigit}`
-        } else {
-          label = state.eoPrediction.toUpperCase()
-        }
-        pendingLabelRef.current = label
+        // Store digit only — no OVER/UNDER/EVEN/ODD label
+        pendingDigitRef.current = state.activeBot === 'ou' ? state.currentDigit : state.eoPrediction
         pendingStakeRef.current = state.currentStake
 
         send({ proposal_open_contract: 1, subscribe: 1, contract_id: contractId })
@@ -113,12 +108,18 @@ export default function Bots() {
 
         const won = contract.status === 'won'
         const profit = won ? parseFloat(contract.profit) : -parseFloat(contract.buy_price)
+
+        // Get actual exit digit from contract
+        const exitDigit = contract.exit_tick_display_value
+          ? contract.exit_tick_display_value.toString().slice(-1)
+          : pendingDigitRef.current
+
         pendingTradeRef.current = false
 
         const logId = ++tradeIdRef.current
         setTradeLogs(prev => [{
           id: logId,
-          type: pendingLabelRef.current,
+          digit: exitDigit,
           stake: pendingStakeRef.current,
           result: won ? 'won' : 'lost',
           profit,
@@ -130,14 +131,12 @@ export default function Bots() {
 
         const state = botStateRef.current
 
-        // SL/TP now checked against the bot's own tracked P&L,
-        // not raw account balance drift (fixes premature SL/TP triggers)
         if (totalPnLRef.current <= -state.stopLoss) {
-          stopBot('🛑 Stop Loss reached!')
+          stopBot('Stop Loss reached')
           return
         }
         if (totalPnLRef.current >= state.takeProfit) {
-          stopBot('🎯 Take Profit reached!')
+          stopBot('Take Profit reached')
           return
         }
 
@@ -170,15 +169,12 @@ export default function Bots() {
 
     if (state.activeBot === 'ou') {
       if (!state.inRecovery) {
-        // First loss — switch to digit2, same stake, same direction
         state.inRecovery = true
         state.currentDigit = state.digit2
       } else {
-        // Already in recovery — multiply stake by 1.5, keep digit2
         state.currentStake = parseFloat((state.currentStake * 1.5).toFixed(2))
       }
     } else {
-      // EO bot — no flipping, just increase stake by 1.5x, same prediction
       state.inRecovery = true
       state.currentStake = parseFloat((state.currentStake * 1.5).toFixed(2))
     }
@@ -197,9 +193,7 @@ export default function Bots() {
     setTimeout(() => {
       if (pendingTradeRef.current) {
         pendingTradeRef.current = false
-        if (botStateRef.current.running) {
-          placeNextTrade()
-        }
+        if (botStateRef.current.running) placeNextTrade()
       }
     }, 30000)
 
@@ -225,16 +219,14 @@ export default function Bots() {
       subscribe: 1,
     }
 
-    if (barrier !== undefined) {
-      payload.barrier = barrier
-    }
+    if (barrier !== undefined) payload.barrier = barrier
 
     send(payload)
   }
 
   const startBot = () => {
     if (status !== 'open') {
-      setBotMessage('⏳ Connecting... please try again in a moment')
+      setBotMessage('Connecting... please try again in a moment')
       return
     }
 
@@ -266,9 +258,10 @@ export default function Bots() {
     pendingTradeRef.current = false
     setBotRunning(true)
     setCurrentStake(state.currentStake)
-    setBotMessage('🤖 Bot started!')
+    setBotMessage('Bot started')
     setTradeLogs([])
     setTotalPnL(0)
+    setShowLog(true)
     placeNextTrade()
   }
 
@@ -278,7 +271,7 @@ export default function Bots() {
     botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
     setBotRunning(false)
-    setBotMessage(reason || '⏹ Bot stopped')
+    setBotMessage(reason || 'Bot stopped')
   }
 
   const resetBot = () => {
@@ -292,6 +285,7 @@ export default function Bots() {
     setCurrentStake(0)
     setBotMessage('')
     setTotalPnL(0)
+    setShowLog(false)
   }
 
   const inputStyle = {
@@ -308,9 +302,9 @@ export default function Bots() {
   const labelStyle = { color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem', position: 'relative' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
+        <h1 style={{ color: '#6c63ff', margin: 0 }}>Swift Trade</h1>
         <button onClick={() => { localStorage.removeItem('deriv_token'); window.location.href = '/login' }}
           style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
           Logout</button>
@@ -372,116 +366,171 @@ export default function Bots() {
           Wealth Generator EO</button>
       </div>
 
-      {/* Main Layout */}
-      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-
-        {/* Bot Settings */}
-        <div style={{ flex: 1, background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
-          {activeBot === 'ou' ? (
-            <>
-              <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>🤖 Wealth Generator OU</h3>
-              <p style={labelStyle}>Direction</p>
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <button onClick={() => setOuDirection('over')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'over' ? '#22c55e' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                  Over</button>
-                <button onClick={() => setOuDirection('under')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                  Under</button>
-              </div>
-              <p style={labelStyle}>First Digit (0-9)</p>
-              <select value={ouDigit1} onChange={e => setOuDigit1(e.target.value)} style={inputStyle}>
-                {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-              <p style={labelStyle}>Second Digit (0-9)</p>
-              <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
-                {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-              <p style={labelStyle}>Starting Stake (USD)</p>
-              <input type="number" value={ouStake} onChange={e => setOuStake(e.target.value)} style={inputStyle} />
-              <p style={labelStyle}>Stop Loss (USD)</p>
-              <input type="number" value={ouStopLoss} onChange={e => setOuStopLoss(e.target.value)} style={inputStyle} />
-              <p style={labelStyle}>Take Profit (USD)</p>
-              <input type="number" value={ouTakeProfit} onChange={e => setOuTakeProfit(e.target.value)} style={inputStyle} />
-            </>
-          ) : (
-            <>
-              <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>🤖 Wealth Generator EO</h3>
-              <p style={labelStyle}>Prediction</p>
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <button onClick={() => setEoPrediction('even')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'even' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                  Even</button>
-                <button onClick={() => setEoPrediction('odd')}
-                  style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                  Odd</button>
-              </div>
-              <p style={labelStyle}>Starting Stake (USD)</p>
-              <input type="number" value={eoStake} onChange={e => setEoStake(e.target.value)} style={inputStyle} />
-              <p style={labelStyle}>Stop Loss (USD)</p>
-              <input type="number" value={eoStopLoss} onChange={e => setEoStopLoss(e.target.value)} style={inputStyle} />
-              <p style={labelStyle}>Take Profit (USD)</p>
-              <input type="number" value={eoTakeProfit} onChange={e => setEoTakeProfit(e.target.value)} style={inputStyle} />
-            </>
-          )}
-
-          {botRunning && (
-            <div style={{ background: '#0a0a1a', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
-              <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>CURRENT STAKE</p>
-              <h2 style={{ margin: 0, color: '#6c63ff' }}>${currentStake.toFixed(2)}</h2>
+      {/* Bot Settings */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
+        {activeBot === 'ou' ? (
+          <>
+            <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>Wealth Generator OU</h3>
+            <p style={labelStyle}>Direction</p>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button onClick={() => setOuDirection('over')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'over' ? '#22c55e' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                Over</button>
+              <button onClick={() => setOuDirection('under')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                Under</button>
             </div>
-          )}
+            <p style={labelStyle}>First Digit (0-9)</p>
+            <select value={ouDigit1} onChange={e => setOuDigit1(e.target.value)} style={inputStyle}>
+              {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <p style={labelStyle}>Second Digit (0-9)</p>
+            <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
+              {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <p style={labelStyle}>Starting Stake (USD)</p>
+            <input type="number" value={ouStake} onChange={e => setOuStake(e.target.value)} style={inputStyle} />
+            <p style={labelStyle}>Stop Loss (USD)</p>
+            <input type="number" value={ouStopLoss} onChange={e => setOuStopLoss(e.target.value)} style={inputStyle} />
+            <p style={labelStyle}>Take Profit (USD)</p>
+            <input type="number" value={ouTakeProfit} onChange={e => setOuTakeProfit(e.target.value)} style={inputStyle} />
+          </>
+        ) : (
+          <>
+            <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>Wealth Generator EO</h3>
+            <p style={labelStyle}>Prediction</p>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button onClick={() => setEoPrediction('even')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'even' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                Even</button>
+              <button onClick={() => setEoPrediction('odd')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+                Odd</button>
+            </div>
+            <p style={labelStyle}>Starting Stake (USD)</p>
+            <input type="number" value={eoStake} onChange={e => setEoStake(e.target.value)} style={inputStyle} />
+            <p style={labelStyle}>Stop Loss (USD)</p>
+            <input type="number" value={eoStopLoss} onChange={e => setEoStopLoss(e.target.value)} style={inputStyle} />
+            <p style={labelStyle}>Take Profit (USD)</p>
+            <input type="number" value={eoTakeProfit} onChange={e => setEoTakeProfit(e.target.value)} style={inputStyle} />
+          </>
+        )}
 
-          {botMessage && (
-            <p style={{ color: botMessage.includes('Error') || botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '1rem', fontWeight: 'bold' }}>
-              {botMessage}
-            </p>
-          )}
-
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {!botRunning ? (
-              <button onClick={startBot}
-                style={{ flex: 2, padding: '1rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                ▶ Start Bot</button>
-            ) : (
-              <button onClick={() => stopBot()}
-                style={{ flex: 2, padding: '1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                ⏹ Stop Bot</button>
-            )}
-            <button onClick={resetBot}
-              style={{ flex: 1, padding: '1rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem' }}>
-              🔄</button>
+        {botRunning && (
+          <div style={{ background: '#0a0a1a', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
+            <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>CURRENT STAKE</p>
+            <h2 style={{ margin: 0, color: '#6c63ff' }}>${currentStake.toFixed(2)}</h2>
           </div>
-        </div>
+        )}
 
-        {/* Trade Log */}
-        <div style={{ flex: 1, background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', maxHeight: '600px', overflowY: 'auto' }}>
-          <h3 style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.9rem' }}>TRADE LOG</h3>
-          {tradeLogs.length === 0 ? (
-            <p style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>No trades yet</p>
+        {botMessage && (
+          <p style={{ color: botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '1rem', fontWeight: 'bold' }}>
+            {botMessage}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {!botRunning ? (
+            <button onClick={startBot}
+              style={{ flex: 2, padding: '1rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+              Start Bot</button>
           ) : (
-            <>
-              {tradeLogs.map(log => (
-                <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                  <span style={{ color: '#fff', fontSize: '0.85rem' }}>{log.type} · ${log.stake.toFixed(2)}</span>
-                  <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                    {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
-                  </span>
-                </div>
-              ))}
-
-              <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#0a0a1a', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Total P&L</span>
-                  <span style={{ color: totalPnL >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                    {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </>
+            <button onClick={() => stopBot()}
+              style={{ flex: 2, padding: '1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+              Stop Bot</button>
+          )}
+          <button onClick={resetBot}
+            style={{ flex: 1, padding: '1rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem' }}>
+            Reset</button>
+          {(botRunning || tradeLogs.length > 0) && (
+            <button onClick={() => setShowLog(true)}
+              style={{ flex: 1, padding: '1rem', background: '#1a1a2e', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+              View Log</button>
           )}
         </div>
       </div>
+
+      {/* Floating Trade Log */}
+      {showLog && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#1a1a2e',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            width: '100%',
+            maxWidth: '420px',
+            maxHeight: '80vh',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Float Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <span style={{ color: '#aaa', fontSize: '0.9rem', fontWeight: 'bold' }}>TRADE LOG</span>
+              <button onClick={() => setShowLog(false)}
+                style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>
+                X
+              </button>
+            </div>
+
+            {/* Bot controls inside float */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              {!botRunning ? (
+                <button onClick={startBot}
+                  style={{ flex: 2, padding: '0.75rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                  Start Bot</button>
+              ) : (
+                <button onClick={() => stopBot()}
+                  style={{ flex: 2, padding: '0.75rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                  Stop Bot</button>
+              )}
+              <button onClick={resetBot}
+                style={{ flex: 1, padding: '0.75rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                Reset</button>
+            </div>
+
+            {/* Log entries */}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {tradeLogs.length === 0 ? (
+                <p style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>
+                  Spotting an entry...
+                </p>
+              ) : (
+                <>
+                  {tradeLogs.map(log => (
+                    <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
+                      <span style={{ color: '#fff', fontSize: '0.85rem' }}>
+                        Digit {log.digit} · ${log.stake.toFixed(2)}
+                      </span>
+                      <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                        {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
+                      </span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+
+            {/* P&L */}
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#0a0a1a', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Total P&L</span>
+                <span style={{ color: totalPnL >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                  {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
