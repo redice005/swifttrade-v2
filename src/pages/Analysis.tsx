@@ -65,6 +65,14 @@ export default function Analysis() {
     return () => { unsub() }
   }, [status, market])
 
+  const resetAnalysis = () => {
+    localStorage.removeItem(`digits_${market}`)
+    localStorage.removeItem(`tickCount_${market}`)
+    setDigits([])
+    setTickCount(0)
+    setLastDigit(null)
+  }
+
   const visibleDigits = digits.slice(-viewWindow)
 
   const getPercentages = () => {
@@ -155,6 +163,21 @@ export default function Analysis() {
           font-weight: bold;
           transition: color 0.3s ease;
         }
+        .reset-btn {
+          padding: 0.4rem 0.9rem;
+          border-radius: 8px;
+          border: 1px solid #ef4444;
+          background: transparent;
+          color: #ef4444;
+          font-size: 0.75rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .reset-btn:hover {
+          background: #ef4444;
+          color: #fff;
+        }
       `}</style>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -166,7 +189,10 @@ export default function Analysis() {
 
       {/* Market Selector */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 0.5rem', fontSize: '0.8rem' }}>Select Market</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+          <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>Select Market</p>
+          <button className="reset-btn" onClick={resetAnalysis}>↺ Reset</button>
+        </div>
         <select value={market} onChange={e => setMarket(e.target.value)}
           style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: 'none', borderRadius: '8px' }}>
           <optgroup label="Volatility Indices">
