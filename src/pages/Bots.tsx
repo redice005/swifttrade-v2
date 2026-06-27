@@ -10,8 +10,6 @@ type TradeLog = {
   profit: number
 }
 
-const FATAL_ERRORS = ['insufficient', 'balance', 'limit', 'not enough', 'minimum', 'maximum', 'suspended', 'disabled']
-
 export default function Bots() {
   const [activeBot, setActiveBot] = useState<'ou' | 'eo'>('ou')
   const [botRunning, setBotRunning] = useState(false)
@@ -63,11 +61,6 @@ export default function Bots() {
 
   const getDelay = (mkt: string) => mkt.includes('1HZ') ? 300 : 700
 
-  const isFatalError = (msg: string) => {
-    const lower = msg.toLowerCase()
-    return FATAL_ERRORS.some(e => lower.includes(e))
-  }
-
   useEffect(() => {
     if (status !== 'open') return
 
@@ -80,14 +73,9 @@ export default function Bots() {
         if (!botStateRef.current.running) return
         if (data.error) {
           pendingTradeRef.current = false
-          const errMsg = data.error.message || ''
-          if (isFatalError(errMsg)) {
-            stopBot(`Error: ${errMsg}`)
-          } else {
-            setTimeout(() => {
-              if (botStateRef.current.running) placeNextTrade()
-            }, 2000)
-          }
+          setTimeout(() => {
+            if (botStateRef.current.running) placeNextTrade()
+          }, 2000)
           return
         }
         send({ buy: data.proposal.id, price: botStateRef.current.currentStake })
@@ -96,20 +84,16 @@ export default function Bots() {
       if (data.msg_type === 'buy') {
         if (data.error) {
           pendingTradeRef.current = false
-          const errMsg = data.error.message || ''
-          if (isFatalError(errMsg)) {
-            stopBot(`Error: ${errMsg}`)
-          } else {
-            setTimeout(() => {
-              if (botStateRef.current.running) placeNextTrade()
-            }, 2000)
-          }
+          setTimeout(() => {
+            if (botStateRef.current.running) placeNextTrade()
+          }, 2000)
           return
         }
         const contractId = data.buy.contract_id
         activeContractIdRef.current = contractId
         const state = botStateRef.current
 
+        // Store digit only — no OVER/UNDER/EVEN/ODD label
         pendingDigitRef.current = state.activeBot === 'ou' ? state.currentDigit : state.eoPrediction
         pendingStakeRef.current = state.currentStake
 
@@ -125,6 +109,7 @@ export default function Bots() {
         const won = contract.status === 'won'
         const profit = won ? parseFloat(contract.profit) : -parseFloat(contract.buy_price)
 
+        // Get actual exit digit from contract
         const exitDigit = contract.exit_tick_display_value
           ? contract.exit_tick_display_value.toString().slice(-1)
           : pendingDigitRef.current
@@ -203,12 +188,6 @@ export default function Bots() {
     if (pendingTradeRef.current) return
     const state = botStateRef.current
 
-    // Check balance before placing
-    if (balance !== null && balance < state.currentStake) {
-      stopBot('Insufficient balance to place trade')
-      return
-    }
-
     pendingTradeRef.current = true
 
     setTimeout(() => {
@@ -251,13 +230,6 @@ export default function Bots() {
       return
     }
 
-    // Check balance before starting
-    const stakeAmount = parseFloat(activeBot === 'ou' ? ouStake : eoStake)
-    if (balance !== null && balance < stakeAmount) {
-      setBotMessage('Insufficient balance to start bot')
-      return
-    }
-
     const state = botStateRef.current
     state.running = true
     state.inRecovery = false
@@ -265,8 +237,8 @@ export default function Bots() {
     state.market = market
 
     if (activeBot === 'ou') {
-      state.startingStake = stakeAmount
-      state.currentStake = stakeAmount
+      state.startingStake = parseFloat(ouStake)
+      state.currentStake = parseFloat(ouStake)
       state.direction = ouDirection
       state.digit1 = ouDigit1
       state.digit2 = ouDigit2
@@ -274,8 +246,8 @@ export default function Bots() {
       state.stopLoss = parseFloat(ouStopLoss)
       state.takeProfit = parseFloat(ouTakeProfit)
     } else {
-      state.startingStake = stakeAmount
-      state.currentStake = stakeAmount
+      state.startingStake = parseFloat(eoStake)
+      state.currentStake = parseFloat(eoStake)
       state.eoPrediction = eoPrediction
       state.stopLoss = parseFloat(eoStopLoss)
       state.takeProfit = parseFloat(eoTakeProfit)
@@ -452,7 +424,7 @@ export default function Bots() {
         )}
 
         {botMessage && (
-          <p style={{ color: botMessage.includes('Stop') || botMessage.includes('Error') || botMessage.includes('Insufficient') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '1rem', fontWeight: 'bold' }}>
+          <p style={{ color: botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '1rem', fontWeight: 'bold' }}>
             {botMessage}
           </p>
         )}
@@ -500,13 +472,16 @@ export default function Bots() {
             display: 'flex',
             flexDirection: 'column'
           }}>
+            {/* Float Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <span style={{ color: '#aaa', fontSize: '0.9rem', fontWeight: 'bold' }}>TRADE LOG</span>
               <button onClick={() => setShowLog(false)}
                 style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>
-                X</button>
+                X
+              </button>
             </div>
 
+            {/* Bot controls inside float */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               {!botRunning ? (
                 <button onClick={startBot}
@@ -522,31 +497,29 @@ export default function Bots() {
                 Reset</button>
             </div>
 
-            {botMessage && (
-              <p style={{ color: botMessage.includes('Stop') || botMessage.includes('Error') || botMessage.includes('Insufficient') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                {botMessage}
-              </p>
-            )}
-
+            {/* Log entries */}
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {tradeLogs.length === 0 ? (
                 <p style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>
                   Spotting an entry...
                 </p>
               ) : (
-                tradeLogs.map(log => (
-                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                    <span style={{ color: '#fff', fontSize: '0.85rem' }}>
-                      Digit {log.digit} · ${log.stake.toFixed(2)}
-                    </span>
-                    <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                      {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
-                    </span>
-                  </div>
-                ))
+                <>
+                  {tradeLogs.map(log => (
+                    <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
+                      <span style={{ color: '#fff', fontSize: '0.85rem' }}>
+                        Digit {log.digit} · ${log.stake.toFixed(2)}
+                      </span>
+                      <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                        {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
+                      </span>
+                    </div>
+                  ))}
+                </>
               )}
             </div>
 
+            {/* P&L */}
             <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#0a0a1a', borderRadius: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Total P&L</span>
