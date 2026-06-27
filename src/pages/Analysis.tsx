@@ -18,7 +18,7 @@ export default function Analysis() {
     } catch { return 0 }
   })
   const [pulse, setPulse] = useState(false)
-  const [viewWindow, setViewWindow] = useState<10 | 20 | 50 | 100>(50)
+  const [viewWindow, setViewWindow] = useState<50 | 100 | 200>(50)
 
   const { status, send, subscribe } = useDeriv()
   const currentMarketRef = useRef(market)
@@ -61,7 +61,7 @@ export default function Analysis() {
         setTimeout(() => setPulse(false), 600)
         setDigits(prev => {
           const updated = [...prev, digit]
-          return updated.slice(-1000) // rolling cap raised to 1000
+          return updated.slice(-1000) // rolling cap stays at 1000
         })
         setTickCount(prev => prev + 1)
       }
@@ -264,7 +264,7 @@ export default function Analysis() {
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem 1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 0.75rem', fontSize: '0.8rem' }}>ANALYSE LAST</p>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {([10, 20, 50, 100] as const).map(n => (
+          {([50, 100, 200] as const).map(n => (
             <button
               key={n}
               className={`window-btn ${viewWindow === n ? 'active' : ''}`}
@@ -330,10 +330,10 @@ export default function Analysis() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.6rem' }}>
           <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            Under 5 (0-4): {overUnder.under}%
+            Under 5: {overUnder.under}%
           </span>
           <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            Over 5 (5-9): {overUnder.over}%
+            Over 5: {overUnder.over}%
           </span>
         </div>
       </div>
