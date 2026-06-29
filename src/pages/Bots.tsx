@@ -59,7 +59,8 @@ export default function Bots() {
 
   const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
 
-  const getDelay = (mkt: string) => mkt.includes('1HZ') ? 300 : 700
+  // Tightened inter-trade delay for a snappier feel between trades
+  const getDelay = (mkt: string) => mkt.includes('1HZ') ? 150 : 350
 
   useEffect(() => {
     if (status !== 'open') return
@@ -93,7 +94,6 @@ export default function Bots() {
         activeContractIdRef.current = contractId
         const state = botStateRef.current
 
-        // Store digit only — no OVER/UNDER/EVEN/ODD label
         pendingDigitRef.current = state.activeBot === 'ou' ? state.currentDigit : state.eoPrediction
         pendingStakeRef.current = state.currentStake
 
@@ -109,7 +109,6 @@ export default function Bots() {
         const won = contract.status === 'won'
         const profit = won ? parseFloat(contract.profit) : -parseFloat(contract.buy_price)
 
-        // Get actual exit digit from contract
         const exitDigit = contract.exit_tick_display_value
           ? contract.exit_tick_display_value.toString().slice(-1)
           : pendingDigitRef.current
@@ -226,7 +225,7 @@ export default function Bots() {
 
   const startBot = () => {
     if (status !== 'open') {
-      setBotMessage('Connecting... please try again in a moment')
+      setBotMessage('please try again in a moment')
       return
     }
 
@@ -262,7 +261,9 @@ export default function Bots() {
     setTradeLogs([])
     setTotalPnL(0)
     setShowLog(true)
-    placeNextTrade()
+
+    // Small safety buffer so the very first trade doesn't race a freshly-opened socket
+    setTimeout(() => placeNextTrade(), 150)
   }
 
   const stopBot = (reason?: string) => {
