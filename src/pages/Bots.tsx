@@ -19,6 +19,7 @@ export default function Bots() {
   const [market, setMarket] = useState('R_100')
   const [totalPnL, setTotalPnL] = useState(0)
   const [showLog, setShowLog] = useState(false)
+  const [isPlacing, setIsPlacing] = useState(false)
   const tradeIdRef = useRef(0)
   const pendingTradeRef = useRef(false)
   const totalPnLRef = useRef(0)
@@ -59,7 +60,6 @@ export default function Bots() {
 
   const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
 
-  // Tightened inter-trade delay for a snappier feel between trades
   const getDelay = (mkt: string) => mkt.includes('1HZ') ? 150 : 350
 
   useEffect(() => {
@@ -74,6 +74,7 @@ export default function Bots() {
         if (!botStateRef.current.running) return
         if (data.error) {
           pendingTradeRef.current = false
+          setIsPlacing(false)
           setTimeout(() => {
             if (botStateRef.current.running) placeNextTrade()
           }, 2000)
@@ -85,6 +86,7 @@ export default function Bots() {
       if (data.msg_type === 'buy') {
         if (data.error) {
           pendingTradeRef.current = false
+          setIsPlacing(false)
           setTimeout(() => {
             if (botStateRef.current.running) placeNextTrade()
           }, 2000)
@@ -114,6 +116,7 @@ export default function Bots() {
           : pendingDigitRef.current
 
         pendingTradeRef.current = false
+        setIsPlacing(false)
 
         const logId = ++tradeIdRef.current
         setTradeLogs(prev => [{
@@ -188,10 +191,12 @@ export default function Bots() {
     const state = botStateRef.current
 
     pendingTradeRef.current = true
+    setIsPlacing(true)
 
     setTimeout(() => {
       if (pendingTradeRef.current) {
         pendingTradeRef.current = false
+        setIsPlacing(false)
         if (botStateRef.current.running) placeNextTrade()
       }
     }, 30000)
@@ -261,8 +266,6 @@ export default function Bots() {
     setTradeLogs([])
     setTotalPnL(0)
     setShowLog(true)
-
-    // Small safety buffer so the very first trade doesn't race a freshly-opened socket
     setTimeout(() => placeNextTrade(), 150)
   }
 
@@ -271,6 +274,7 @@ export default function Bots() {
     botStateRef.current.startingBalance = 0
     botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
+    setIsPlacing(false)
     setBotRunning(false)
     setBotMessage(reason || 'Bot stopped')
   }
@@ -281,6 +285,7 @@ export default function Bots() {
     botStateRef.current.inRecovery = false
     pendingTradeRef.current = false
     totalPnLRef.current = 0
+    setIsPlacing(false)
     setBotRunning(false)
     setTradeLogs([])
     setCurrentStake(0)
@@ -304,6 +309,16 @@ export default function Bots() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem', position: 'relative' }}>
+      <style>{`
+        @keyframes pulse-placing {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        .placing-row {
+          animation: pulse-placing 0.9s ease-in-out infinite;
+        }
+      `}</style>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ color: '#6c63ff', margin: 0 }}>Swift Trade</h1>
         <button onClick={() => { localStorage.removeItem('deriv_token'); window.location.href = '/login' }}
@@ -500,7 +515,16 @@ export default function Bots() {
 
             {/* Log entries */}
             <div style={{ overflowY: 'auto', flex: 1 }}>
-              {tradeLogs.length === 0 ? (
+
+              {/* Pulsing "Placing trade..." row — shown whenever a trade is in flight */}
+              {isPlacing && (
+                <div className="placing-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
+                  <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>Placing trade...</span>
+                  <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>···</span>
+                </div>
+              )}
+
+              {tradeLogs.length === 0 && !isPlacing ? (
                 <p style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>
                   Spotting an entry...
                 </p>
