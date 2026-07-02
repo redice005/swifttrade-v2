@@ -13,6 +13,18 @@ export default function Login() {
       setEmailError('Enter a valid email')
       return
     }
+
+    // Check if email is already registered in localStorage
+    const existing = JSON.parse(localStorage.getItem('funded_emails') || '[]')
+    if (existing.includes(email.toLowerCase())) {
+      setEmailError('This email is already on track')
+      return
+    }
+
+    // Save email to localStorage
+    existing.push(email.toLowerCase())
+    localStorage.setItem('funded_emails', JSON.stringify(existing))
+
     setEmailError('')
     setChallengeStarted(true)
   }
@@ -186,7 +198,8 @@ export default function Login() {
                     background: '#0a0a1a', color: '#fff',
                     border: emailError ? '1px solid #ef4444' : '1px solid #333',
                     borderRadius: '8px', fontSize: '0.9rem',
-                    boxSizing: 'border-box', marginBottom: '0.4rem', outline: 'none'
+                    boxSizing: 'border-box' as const,
+                    marginBottom: '0.4rem', outline: 'none'
                   }}
                 />
                 {emailError && (
