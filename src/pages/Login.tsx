@@ -143,8 +143,8 @@ export default function Login() {
         <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', marginBottom: '2rem' }}>
           {[
             { label: 'Manual Trading', icon: '📈' },
-            { label: 'Smart Bots', icon: '🤖' },
-            { label: 'Analysis', icon: '📊' },
+            { label: 'Smart Bots', icon: '' },
+            { label: 'Analysis', icon: '' },
           ].map((f, i) => (
             <span key={i} style={{
               background: 'rgba(108, 99, 255, 0.15)',
