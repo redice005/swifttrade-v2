@@ -1,11 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { loginWithDeriv } from '@/lib/auth'
+
+// Animated ticker data
+const TICKER_BASE = [
+  { symbol: 'V100', price: 346.61 },
+  { symbol: 'V75', price: 521.23 },
+  { symbol: 'V50', price: 1204.55 },
+  { symbol: 'V25', price: 842.10 },
+  { symbol: 'V10', price: 2341.89 },
+  { symbol: 'V100(1s)', price: 346.81 },
+]
 
 export default function Login() {
   const [showFunding, setShowFunding] = useState(false)
   const [email, setEmail] = useState('')
   const [challengeStarted, setChallengeStarted] = useState(false)
   const [emailError, setEmailError] = useState('')
+  const [tickers, setTickers] = useState(
+    TICKER_BASE.map(t => ({ ...t, up: Math.random() > 0.5 }))
+  )
+  const tickerRef = useRef<HTMLDivElement>(null)
+
+  // Animate ticker prices every 1.5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickers(prev => prev.map(t => {
+        const change = (Math.random() * 0.8 - 0.4)
+        const newPrice = parseFloat((t.price + change).toFixed(2))
+        return { ...t, price: newPrice, up: change >= 0 }
+      }))
+    }, 1500)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Scroll ticker bar continuously
+  useEffect(() => {
+    const el = tickerRef.current
+    if (!el) return
+    let pos = 0
+    const scroll = () => {
+      pos += 0.5
+      if (pos >= el.scrollWidth / 2) pos = 0
+      el.scrollLeft = pos
+    }
+    const id = setInterval(scroll, 16)
+    return () => clearInterval(id)
+  }, [])
 
   const handleStartChallenge = () => {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -13,21 +53,19 @@ export default function Login() {
       setEmailError('Enter a valid email')
       return
     }
-
-    // Check if email is already registered in localStorage
     const existing = JSON.parse(localStorage.getItem('funded_emails') || '[]')
     if (existing.includes(email.toLowerCase())) {
       setEmailError('This email is already on track')
       return
     }
-
-    // Save email to localStorage
     existing.push(email.toLowerCase())
     localStorage.setItem('funded_emails', JSON.stringify(existing))
-
     setEmailError('')
     setChallengeStarted(true)
   }
+
+  // Duplicate tickers for seamless scroll loop
+  const tickerItems = [...tickers, ...tickers]
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
@@ -56,29 +94,69 @@ export default function Login() {
         </svg>
       </div>
 
-      {/* Live ticker bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'rgba(108, 99, 255, 0.1)', borderBottom: '1px solid rgba(108, 99, 255, 0.2)', padding: '0.4rem 1rem', display: 'flex', gap: '2rem', overflowX: 'hidden', zIndex: 1 }}>
-        {['V100 ▲ 346.61', 'V75 ▲ 521.23', 'V50 ▼ 1204.55', 'V25 ▲ 842.10', 'V10 ▼ 2341.89', 'V100(1s) ▲ 346.81'].map((tick, i) => (
-          <span key={i} style={{ color: tick.includes('▲') ? '#22c55e' : '#ef4444', fontSize: '0.75rem', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{tick}</span>
+      {/* Live animated ticker bar */}
+      <div
+        ref={tickerRef}
+        style={{
+          position: 'absolute', top: 0, left: 0, right: 0,
+          background: 'rgba(108, 99, 255, 0.1)',
+          borderBottom: '1px solid rgba(108, 99, 255, 0.2)',
+          padding: '0.4rem 0',
+          display: 'flex',
+          gap: '2rem',
+          overflowX: 'hidden',
+          zIndex: 1,
+          scrollbarWidth: 'none',
+        }}
+      >
+        {tickerItems.map((t, i) => (
+          <span key={i} style={{
+            color: t.up ? '#22c55e' : '#ef4444',
+            fontSize: '0.75rem',
+            whiteSpace: 'nowrap',
+            fontFamily: 'monospace',
+            flexShrink: 0,
+            paddingLeft: i === 0 ? '1rem' : 0,
+            transition: 'color 0.3s ease',
+          }}>
+            {t.symbol} {t.up ? '▲' : '▼'} {t.price.toFixed(2)}
+          </span>
         ))}
       </div>
 
       {/* Main card */}
       <div style={{ position: 'relative', zIndex: 1, background: 'rgba(26, 26, 46, 0.95)', backdropFilter: 'blur(20px)', padding: '2.5rem 2rem', borderRadius: '16px', width: '100%', maxWidth: '420px', textAlign: 'center', border: '1px solid rgba(108, 99, 255, 0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
 
-        {/* Logo */}
-        <div style={{ marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: '2.5rem' }}>⚡</span>
+        {/* Logo — inline SVG bolt, consistent across all devices */}
+        <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+          <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
+            <path d="M21 0L4 24h13L11 44l21-28H19L21 0z" fill="#6c63ff" />
+          </svg>
         </div>
+
         <h1 style={{ color: '#fff', marginBottom: '0.25rem', fontSize: '1.8rem', fontWeight: 'bold' }}>
           Swift <span style={{ color: '#6c63ff' }}>Trade</span>
         </h1>
         <p style={{ color: '#aaa', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Elite execution platform</p>
 
-        {/* Feature pills */}
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
-          {['📈 Manual Trading', ' Smart Bots', ' Live Analysis'].map((f, i) => (
-            <span key={i} style={{ background: 'rgba(108, 99, 255, 0.15)', border: '1px solid rgba(108, 99, 255, 0.3)', borderRadius: '20px', padding: '0.25rem 0.75rem', fontSize: '0.7rem', color: '#aaa' }}>{f}</span>
+        {/* Feature pills — single row, no wrapping */}
+        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', marginBottom: '2rem' }}>
+          {[
+            { label: 'Manual Trading', icon: '📈' },
+            { label: 'Smart Bots', icon: '🤖' },
+            { label: 'Analysis', icon: '📊' },
+          ].map((f, i) => (
+            <span key={i} style={{
+              background: 'rgba(108, 99, 255, 0.15)',
+              border: '1px solid rgba(108, 99, 255, 0.3)',
+              borderRadius: '20px',
+              padding: '0.25rem 0.6rem',
+              fontSize: '0.68rem',
+              color: '#aaa',
+              whiteSpace: 'nowrap',
+            }}>
+              {f.icon} {f.label}
+            </span>
           ))}
         </div>
 
@@ -89,7 +167,8 @@ export default function Login() {
           Login
         </button>
 
-        <div style={{ border: '1px solid #222', borderRadius: '10px', padding: '1rem', marginBottom: '1rem' }}>
+        {/* Create Free Account — same card treatment as other sections */}
+        <div style={{ border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', padding: '1rem', marginBottom: '1rem', background: 'rgba(108, 99, 255, 0.04)' }}>
           <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem' }}>Don't have a Deriv account?</p>
           <button
             onClick={() => window.open('https://partner-tracking.deriv.com/click?a=18029&o=1&c=3&link_id=1', '_blank')}
@@ -116,7 +195,7 @@ export default function Login() {
 
         {/* Join our community */}
         <div style={{ border: '1px solid #222', borderRadius: '10px', padding: '1rem' }}>
-          <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem' }}>Join our community</p>
+          <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #1a1a2e' }}>Join our community</p>
           <div style={{ display: 'flex', gap: '0.6rem' }}>
             <button
               onClick={() => window.open('https://chat.whatsapp.com/KTG7M57G2rsJtaYeweE4Ud?s=cl&p=a&ilr=1', '_blank')}
@@ -157,7 +236,6 @@ export default function Login() {
             border: '1px solid rgba(245, 158, 11, 0.25)',
             boxShadow: '0 25px 50px rgba(0,0,0,0.6)'
           }}>
-            {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div>
                 <p style={{ color: '#f59e0b', fontSize: '0.7rem', fontWeight: 'bold', margin: '0 0 0.2rem', letterSpacing: '0.06em' }}>FUNDED CHALLENGE</p>
@@ -169,7 +247,6 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Rules */}
             <div style={{ background: '#0a0a1a', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem' }}>
               <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>CHALLENGE RULES</p>
               {[
