@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import emailjs from '@emailjs/browser'
 import { loginWithDeriv } from '@/lib/auth'
+
+// EmailJS config
+const EMAILJS_SERVICE_ID = 'service_sdp320w'
+const EMAILJS_TEMPLATE_ID = 'template_v61b4pd'
+const EMAILJS_PUBLIC_KEY = 'w9NPAoiHUGJb-hwLL'
 
 // Animated ticker data
 const TICKER_BASE = [
@@ -16,6 +22,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [challengeStarted, setChallengeStarted] = useState(false)
   const [emailError, setEmailError] = useState('')
+  const [sending, setSending] = useState(false)
   const [tickers, setTickers] = useState(
     TICKER_BASE.map(t => ({ ...t, up: Math.random() > 0.5 }))
   )
@@ -47,28 +54,51 @@ export default function Login() {
     return () => clearInterval(id)
   }, [])
 
-  const handleStartChallenge = () => {
+  const handleStartChallenge = async () => {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     if (!valid) {
       setEmailError('Enter a valid email')
       return
     }
+
+    // Check duplicate
     const existing = JSON.parse(localStorage.getItem('funded_emails') || '[]')
     if (existing.includes(email.toLowerCase())) {
       setEmailError('This email is already on track')
       return
     }
-    existing.push(email.toLowerCase())
-    localStorage.setItem('funded_emails', JSON.stringify(existing))
+
+    setSending(true)
     setEmailError('')
-    setChallengeStarted(true)
+
+    try {
+      // Send welcome email via EmailJS
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          to_email: email,
+          to_name: email.split('@')[0],
+          reply_to: 'noreply@swifttrade.pro',
+        },
+        EMAILJS_PUBLIC_KEY
+      )
+
+      // Only save to localStorage after successful send
+      existing.push(email.toLowerCase())
+      localStorage.setItem('funded_emails', JSON.stringify(existing))
+      setChallengeStarted(true)
+    } catch {
+      setEmailError('Failed to send email. Please try again.')
+    } finally {
+      setSending(false)
+    }
   }
 
-  // Duplicate tickers for seamless scroll loop
   const tickerItems = [...tickers, ...tickers]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', paddingTop: '3rem', position: 'relative', overflow: 'hidden' }}>
 
       {/* Animated background lines */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
@@ -94,18 +124,18 @@ export default function Login() {
         </svg>
       </div>
 
-      {/* Live animated ticker bar */}
+      {/* Live animated ticker bar — zIndex 10 so it always floats above the card */}
       <div
         ref={tickerRef}
         style={{
-          position: 'absolute', top: 0, left: 0, right: 0,
-          background: 'rgba(108, 99, 255, 0.1)',
+          position: 'fixed', top: 0, left: 0, right: 0,
+          background: 'rgba(10, 10, 26, 0.95)',
           borderBottom: '1px solid rgba(108, 99, 255, 0.2)',
           padding: '0.4rem 0',
           display: 'flex',
           gap: '2rem',
           overflowX: 'hidden',
-          zIndex: 1,
+          zIndex: 10,
           scrollbarWidth: 'none',
         }}
       >
@@ -127,7 +157,7 @@ export default function Login() {
       {/* Main card */}
       <div style={{ position: 'relative', zIndex: 1, background: 'rgba(26, 26, 46, 0.95)', backdropFilter: 'blur(20px)', padding: '2.5rem 2rem', borderRadius: '16px', width: '100%', maxWidth: '420px', textAlign: 'center', border: '1px solid rgba(108, 99, 255, 0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
 
-        {/* Logo — inline SVG bolt, consistent across all devices */}
+        {/* Logo */}
         <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
           <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
             <path d="M21 0L4 24h13L11 44l21-28H19L21 0z" fill="#6c63ff" />
@@ -139,7 +169,7 @@ export default function Login() {
         </h1>
         <p style={{ color: '#aaa', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Elite execution platform</p>
 
-        {/* Feature pills — single row, no wrapping */}
+        {/* Feature pills */}
         <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', marginBottom: '2rem' }}>
           {[
             { label: 'Manual Trading', icon: '📈' },
@@ -167,7 +197,7 @@ export default function Login() {
           Login
         </button>
 
-        {/* Create Free Account — same card treatment as other sections */}
+        {/* Create Free Account */}
         <div style={{ border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', padding: '1rem', marginBottom: '1rem', background: 'rgba(108, 99, 255, 0.04)' }}>
           <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem' }}>Don't have a Deriv account?</p>
           <button
@@ -212,7 +242,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Bottom trust line */}
         <p style={{ color: '#333', fontSize: '0.7rem', marginTop: '1.5rem' }}>Powered by Deriv · Secure OAuth2 Login</p>
       </div>
 
@@ -250,13 +279,13 @@ export default function Login() {
             <div style={{ background: '#0a0a1a', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem' }}>
               <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>CHALLENGE RULES</p>
               {[
-                { icon: '📅', text: 'Trade for 3 consecutive days' },
-                { icon: '💰', text: 'Hit a minimum profit of $10 per day' },
-                { icon: '🎯', text: 'Reach Take Profit consistently each session' },
-                { icon: '📊', text: '2% share rate applied on your funded payouts' },
+                { text: 'Trade for 3 consecutive days' },
+                { text: 'Hit a minimum profit of $10 per day' },
+                { text: 'Reach Take Profit consistently each session' },
+                { text: '2% share rate applied on your funded payouts' },
               ].map((rule, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: i < 3 ? '0.6rem' : 0 }}>
-                  <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>{rule.icon}</span>
+                  <span style={{ color: '#f59e0b', fontSize: '0.8rem', flexShrink: 0, marginTop: '0.1rem' }}>—</span>
                   <p style={{ color: '#ccc', fontSize: '0.82rem', margin: 0, lineHeight: 1.4 }}>{rule.text}</p>
                 </div>
               ))}
@@ -285,25 +314,28 @@ export default function Login() {
                 {!emailError && <div style={{ height: '0.75rem' }} />}
                 <button
                   onClick={handleStartChallenge}
+                  disabled={sending}
                   style={{
                     width: '100%', padding: '0.85rem',
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    background: sending ? '#555' : 'linear-gradient(135deg, #f59e0b, #d97706)',
                     color: '#fff', border: 'none', borderRadius: '8px',
-                    cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold',
-                    boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
+                    cursor: sending ? 'not-allowed' : 'pointer',
+                    fontSize: '1rem', fontWeight: 'bold',
+                    boxShadow: sending ? 'none' : '0 4px 12px rgba(245, 158, 11, 0.3)'
                   }}
                 >
-                  Start Challenge
+                  {sending ? 'Sending...' : 'Start Challenge'}
                 </button>
               </>
             ) : (
               <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
                 <p style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1rem', margin: '0 0 0.5rem' }}>
-                  Challenge Started!
+                  You are on track!
                 </p>
-                <p style={{ color: '#aaa', fontSize: '0.83rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
-                  You'll be notified at <span style={{ color: '#fff', fontWeight: 'bold' }}>{email}</span> to claim your reward after 3 days of consistent profitability.
+                <p style={{ color: '#aaa', fontSize: '0.83rem', margin: '0 0 1.25rem', lineHeight: 1.6 }}>
+                  A confirmation has been sent to{' '}
+                  <span style={{ color: '#fff', fontWeight: 'bold' }}>{email}</span>.
+                  We will email you as soon as the funding condition is met.
                 </p>
                 <button
                   onClick={() => setShowFunding(false)}
