@@ -3,7 +3,7 @@ import emailjs from '@emailjs/browser'
 import { loginWithDeriv } from '@/lib/auth'
 
 // EmailJS config
-const EMAILJS_SERVICE_ID = 'service_sdp320w'
+const EMAILJS_SERVICE_ID = 'service_7vgjvy7'
 const EMAILJS_TEMPLATE_ID = 'template_yduud3d'
 const EMAILJS_PUBLIC_KEY = 'w9NPAoiHUGJb-hwLL'
 
