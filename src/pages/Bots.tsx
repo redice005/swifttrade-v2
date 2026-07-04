@@ -5,7 +5,6 @@ import { useDeriv } from '@/context/DerivContext'
 type TradeLog = {
   id: number
   digit: string
-  stake: number
   result: 'won' | 'lost'
   profit: number
 }
@@ -14,7 +13,6 @@ export default function Bots() {
   const [activeBot, setActiveBot] = useState<'ou' | 'eo'>('ou')
   const [botRunning, setBotRunning] = useState(false)
   const [tradeLogs, setTradeLogs] = useState<TradeLog[]>([])
-  const [currentStake, setCurrentStake] = useState<number>(0)
   const [botMessage, setBotMessage] = useState('')
   const [market, setMarket] = useState('R_100')
   const [totalPnL, setTotalPnL] = useState(0)
@@ -27,7 +25,6 @@ export default function Bots() {
   const pendingStakeRef = useRef(0)
   const activeContractIdRef = useRef<number | null>(null)
 
-  // OU Bot settings
   const [ouDirection, setOuDirection] = useState<'over' | 'under'>('over')
   const [ouDigit1, setOuDigit1] = useState('1')
   const [ouDigit2, setOuDigit2] = useState('3')
@@ -35,7 +32,6 @@ export default function Bots() {
   const [ouStopLoss, setOuStopLoss] = useState('10')
   const [ouTakeProfit, setOuTakeProfit] = useState('10')
 
-  // EO Bot settings
   const [eoPrediction, setEoPrediction] = useState<'even' | 'odd'>('even')
   const [eoStake, setEoStake] = useState('1')
   const [eoStopLoss, setEoStopLoss] = useState('10')
@@ -95,10 +91,8 @@ export default function Bots() {
         const contractId = data.buy.contract_id
         activeContractIdRef.current = contractId
         const state = botStateRef.current
-
         pendingDigitRef.current = state.activeBot === 'ou' ? state.currentDigit : state.eoPrediction
         pendingStakeRef.current = state.currentStake
-
         send({ proposal_open_contract: 1, subscribe: 1, contract_id: contractId })
       }
 
@@ -122,7 +116,6 @@ export default function Bots() {
         setTradeLogs(prev => [{
           id: logId,
           digit: exitDigit,
-          stake: pendingStakeRef.current,
           result: won ? 'won' : 'lost',
           profit,
         }, ...prev])
@@ -163,12 +156,10 @@ export default function Bots() {
     state.inRecovery = false
     state.currentStake = state.startingStake
     state.currentDigit = state.digit1
-    setCurrentStake(state.startingStake)
   }
 
   const handleLoss = () => {
     const state = botStateRef.current
-
     if (state.activeBot === 'ou') {
       if (!state.inRecovery) {
         state.inRecovery = true
@@ -180,8 +171,6 @@ export default function Bots() {
       state.inRecovery = true
       state.currentStake = parseFloat((state.currentStake * 1.5).toFixed(2))
     }
-
-    setCurrentStake(state.currentStake)
     setTimeout(() => placeNextTrade(), getDelay(state.market))
   }
 
@@ -224,7 +213,6 @@ export default function Bots() {
     }
 
     if (barrier !== undefined) payload.barrier = barrier
-
     send(payload)
   }
 
@@ -261,7 +249,6 @@ export default function Bots() {
     totalPnLRef.current = 0
     pendingTradeRef.current = false
     setBotRunning(true)
-    setCurrentStake(state.currentStake)
     setBotMessage('Bot started')
     setTradeLogs([])
     setTotalPnL(0)
@@ -288,7 +275,6 @@ export default function Bots() {
     setIsPlacing(false)
     setBotRunning(false)
     setTradeLogs([])
-    setCurrentStake(0)
     setBotMessage('')
     setTotalPnL(0)
     setShowLog(false)
@@ -314,9 +300,7 @@ export default function Bots() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
-        .placing-row {
-          animation: pulse-placing 0.9s ease-in-out infinite;
-        }
+        .placing-row { animation: pulse-placing 0.9s ease-in-out infinite; }
       `}</style>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -328,7 +312,6 @@ export default function Bots() {
 
       <NavBar />
 
-      {/* Account Toggle */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
           <button onClick={() => setAccountType('demo')}
@@ -344,7 +327,6 @@ export default function Bots() {
         </h2>
       </div>
 
-      {/* Market Selector */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={labelStyle}>Market</p>
         <select value={market} onChange={e => setMarket(e.target.value)}
@@ -372,7 +354,6 @@ export default function Bots() {
         </select>
       </div>
 
-      {/* Bot Selector */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <button onClick={() => setActiveBot('ou')}
           style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: 'none', background: activeBot === 'ou' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
@@ -382,7 +363,6 @@ export default function Bots() {
           Wealth Generator EO</button>
       </div>
 
-      {/* Bot Settings */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
         {activeBot === 'ou' ? (
           <>
@@ -432,13 +412,6 @@ export default function Bots() {
           </>
         )}
 
-        {botRunning && (
-          <div style={{ background: '#0a0a1a', borderRadius: '8px', padding: '1rem', marginBottom: '1rem' }}>
-            <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>CURRENT STAKE</p>
-            <h2 style={{ margin: 0, color: '#6c63ff' }}>${currentStake.toFixed(2)}</h2>
-          </div>
-        )}
-
         {botMessage && (
           <p style={{ color: botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '1rem', fontWeight: 'bold' }}>
             {botMessage}
@@ -466,7 +439,6 @@ export default function Bots() {
         </div>
       </div>
 
-      {/* Floating Trade Log */}
       {showLog && (
         <div style={{
           position: 'fixed',
@@ -488,16 +460,13 @@ export default function Bots() {
             display: 'flex',
             flexDirection: 'column'
           }}>
-            {/* Float Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <span style={{ color: '#aaa', fontSize: '0.9rem', fontWeight: 'bold' }}>TRADE LOG</span>
               <button onClick={() => setShowLog(false)}
                 style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>
-                X
-              </button>
+                X</button>
             </div>
 
-            {/* Bot controls inside float */}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               {!botRunning ? (
                 <button onClick={startBot}
@@ -513,10 +482,7 @@ export default function Bots() {
                 Reset</button>
             </div>
 
-            {/* Log entries */}
             <div style={{ overflowY: 'auto', flex: 1 }}>
-
-              {/* Pulsing "Placing trade..." row — shown whenever a trade is in flight */}
               {isPlacing && (
                 <div className="placing-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
                   <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>Placing trade...</span>
@@ -529,22 +495,19 @@ export default function Bots() {
                   Spotting an entry...
                 </p>
               ) : (
-                <>
-                  {tradeLogs.map(log => (
-                    <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                      <span style={{ color: '#fff', fontSize: '0.85rem' }}>
-                        Digit {log.digit} · ${log.stake.toFixed(2)}
-                      </span>
-                      <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                        {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
-                      </span>
-                    </div>
-                  ))}
-                </>
+                tradeLogs.map(log => (
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
+                    <span style={{ color: '#fff', fontSize: '0.85rem' }}>
+                      Digit {log.digit}
+                    </span>
+                    <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                      {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
+                    </span>
+                  </div>
+                ))
               )}
             </div>
 
-            {/* P&L */}
             <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#0a0a1a', borderRadius: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Total P&L</span>
