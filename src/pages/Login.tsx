@@ -228,7 +228,7 @@ export default function Login() {
           <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #1a1a2e' }}>Join our community</p>
           <div style={{ display: 'flex', gap: '0.6rem' }}>
             <button
-              onClick={() => window.open('https://chat.whatsapp.com/KTG7M57G2rsJtaYeweE4Ud?s=cl&p=a&ilr=1', '_blank')}
+              onClick={() => window.open('https://whatsapp.com/channel/0029Vb8jxUtISTkBfBpxiO1Y')}
               style={{ flex: 1, padding: '0.75rem', background: 'rgba(34, 197, 94, 0.12)', color: '#22c55e', border: '1px solid #22c55e', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}
             >
               WhatsApp
