@@ -2,12 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import emailjs from '@emailjs/browser'
 import { loginWithDeriv } from '@/lib/auth'
 
-// EmailJS config
 const EMAILJS_SERVICE_ID = 'service_7vgjvy7'
 const EMAILJS_TEMPLATE_ID = 'template_yduud3d'
 const EMAILJS_PUBLIC_KEY = 'w9NPAoiHUGJb-hwLL'
 
-// Animated ticker data
 const TICKER_BASE = [
   { symbol: 'V100', price: 346.61 },
   { symbol: 'V75', price: 521.23 },
@@ -28,7 +26,6 @@ export default function Login() {
   )
   const tickerRef = useRef<HTMLDivElement>(null)
 
-  // Animate ticker prices every 1.5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setTickers(prev => prev.map(t => {
@@ -40,7 +37,6 @@ export default function Login() {
     return () => clearInterval(interval)
   }, [])
 
-  // Scroll ticker bar continuously
   useEffect(() => {
     const el = tickerRef.current
     if (!el) return
@@ -60,19 +56,14 @@ export default function Login() {
       setEmailError('Enter a valid email')
       return
     }
-
-    // Check duplicate
     const existing = JSON.parse(localStorage.getItem('funded_emails') || '[]')
     if (existing.includes(email.toLowerCase())) {
       setEmailError('This email is already on track')
       return
     }
-
     setSending(true)
     setEmailError('')
-
     try {
-      // Send welcome email via EmailJS
       await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,
@@ -83,8 +74,6 @@ export default function Login() {
         },
         EMAILJS_PUBLIC_KEY
       )
-
-      // Only save to localStorage after successful send
       existing.push(email.toLowerCase())
       localStorage.setItem('funded_emails', JSON.stringify(existing))
       setChallengeStarted(true)
@@ -100,7 +89,6 @@ export default function Login() {
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', paddingTop: '3rem', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Animated background lines */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
         {[...Array(6)].map((_, i) => (
           <div key={i} style={{
@@ -116,7 +104,6 @@ export default function Login() {
         <div style={{ position: 'absolute', bottom: '20%', right: '10%', width: '250px', height: '250px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.06)', filter: 'blur(80px)' }} />
       </div>
 
-      {/* Fake chart lines top */}
       <div style={{ position: 'absolute', top: '5%', left: 0, right: 0, zIndex: 0, opacity: 0.15 }}>
         <svg viewBox="0 0 400 80" style={{ width: '100%' }}>
           <polyline points="0,60 40,45 80,55 120,30 160,40 200,20 240,35 280,15 320,25 360,10 400,20" fill="none" stroke="#6c63ff" strokeWidth="2" />
@@ -124,7 +111,6 @@ export default function Login() {
         </svg>
       </div>
 
-      {/* Live animated ticker bar — zIndex 10 so it always floats above the card */}
       <div
         ref={tickerRef}
         style={{
@@ -154,10 +140,8 @@ export default function Login() {
         ))}
       </div>
 
-      {/* Main card */}
       <div style={{ position: 'relative', zIndex: 1, background: 'rgba(26, 26, 46, 0.95)', backdropFilter: 'blur(20px)', padding: '2.5rem 2rem', borderRadius: '16px', width: '100%', maxWidth: '420px', textAlign: 'center', border: '1px solid rgba(108, 99, 255, 0.2)', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
 
-        {/* Logo */}
         <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
           <svg width="36" height="44" viewBox="0 0 36 44" fill="none">
             <path d="M21 0L4 24h13L11 44l21-28H19L21 0z" fill="#6c63ff" />
@@ -169,7 +153,6 @@ export default function Login() {
         </h1>
         <p style={{ color: '#aaa', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Elite execution platform</p>
 
-        {/* Feature pills */}
         <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', marginBottom: '2rem' }}>
           {[
             { label: 'Manual Trading', icon: '📈' },
@@ -197,7 +180,6 @@ export default function Login() {
           Login
         </button>
 
-        {/* Create Free Account */}
         <div style={{ border: '1px solid rgba(108, 99, 255, 0.2)', borderRadius: '10px', padding: '1rem', marginBottom: '1rem', background: 'rgba(108, 99, 255, 0.04)' }}>
           <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem' }}>Don't have a Deriv account?</p>
           <button
@@ -209,7 +191,6 @@ export default function Login() {
           <p style={{ color: '#555', fontSize: '0.75rem', margin: '0.5rem 0 0' }}>Free sign up · Start with demo account</p>
         </div>
 
-        {/* Get Funded */}
         <div style={{ border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', padding: '1rem', marginBottom: '1rem', background: 'rgba(245, 158, 11, 0.04)' }}>
           <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.25rem', letterSpacing: '0.05em' }}>FUNDED TRADING</p>
           <p style={{ color: '#aaa', fontSize: '0.82rem', margin: '0 0 0.75rem' }}>
@@ -223,7 +204,6 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Join our community */}
         <div style={{ border: '1px solid #222', borderRadius: '10px', padding: '1rem' }}>
           <p style={{ color: '#aaa', fontSize: '0.85rem', margin: '0 0 0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #1a1a2e' }}>Join our community</p>
           <div style={{ display: 'flex', gap: '0.6rem' }}>
@@ -245,14 +225,12 @@ export default function Login() {
         <p style={{ color: '#333', fontSize: '0.7rem', marginTop: '1.5rem' }}>Powered by Deriv · Secure OAuth2 Login</p>
       </div>
 
-      {/* Fake chart lines bottom */}
       <div style={{ position: 'absolute', bottom: '5%', left: 0, right: 0, zIndex: 0, opacity: 0.15 }}>
         <svg viewBox="0 0 400 80" style={{ width: '100%' }}>
           <polyline points="0,40 40,55 80,35 120,50 160,30 200,45 240,25 280,40 320,20 360,35 400,15" fill="none" stroke="#6c63ff" strokeWidth="2" />
         </svg>
       </div>
 
-      {/* Funding Modal */}
       {showFunding && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -279,12 +257,13 @@ export default function Login() {
             <div style={{ background: '#0a0a1a', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem' }}>
               <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>CHALLENGE RULES</p>
               {[
-                { text: 'Trade for 3 consecutive days' },
+                { text: 'Deposit a minimum of $1 on a real Deriv account' },
+                { text: 'Trade for 5 consecutive days' },
                 { text: 'Hit a minimum profit of $10 per day' },
-                { text: 'Reach Take Profit consistently each session' },
+                { text: 'Do not lose more than $50 in a single day' },
                 { text: '2% share rate applied on your funded payouts' },
               ].map((rule, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: i < 3 ? '0.6rem' : 0 }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: i < 4 ? '0.6rem' : 0 }}>
                   <span style={{ color: '#f59e0b', fontSize: '0.8rem', flexShrink: 0, marginTop: '0.1rem' }}>—</span>
                   <p style={{ color: '#ccc', fontSize: '0.82rem', margin: 0, lineHeight: 1.4 }}>{rule.text}</p>
                 </div>
