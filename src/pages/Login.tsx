@@ -312,7 +312,7 @@ export default function Login() {
                   You are on track!
                 </p>
                 <p style={{ color: '#aaa', fontSize: '0.83rem', margin: '0 0 1.25rem', lineHeight: 1.6 }}>
-                  A confirmation has been sent to{' '}
+                  A confirmation has been sent to you,If you don't see our email within a minute, please check your Promotions or Spam{' '}
                   <span style={{ color: '#fff', fontWeight: 'bold' }}>{email}</span>.
                   We will email you as soon as the funding condition is met.
                 </p>
