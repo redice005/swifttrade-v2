@@ -89,7 +89,7 @@ export default function AiScanner() {
       {/* Scanner Panel */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
-          Demo feature - the market and digits below are chosen at random. This is not real market analysis.
+          Trade responsibily.
         </p>
 
         <div
