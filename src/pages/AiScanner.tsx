@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
+import NavBar from '@/components/NavBar'
 
 // Market pool: V10, V25, V75, V100 and their 1s variants
 const MARKETS = [
-  { code: 'R_10', label: 'Volatility 10 Index' },
-  { code: 'R_25', label: 'Volatility 25 Index' },
-  { code: 'R_75', label: 'Volatility 75 Index' },
-  { code: 'R_100', label: 'Volatility 100 Index' },
-  { code: '1HZ10V', label: 'Volatility 10 (1s) Index' },
-  { code: '1HZ25V', label: 'Volatility 25 (1s) Index' },
-  { code: '1HZ75V', label: 'Volatility 75 (1s) Index' },
-  { code: '1HZ100V', label: 'Volatility 100 (1s) Index' },
+  { code: 'R_10', label: 'Volatility 10' },
+  { code: 'R_25', label: 'Volatility 25' },
+  { code: 'R_75', label: 'Volatility 75' },
+  { code: 'R_100', label: 'Volatility 100' },
+  { code: '1HZ10V', label: 'Volatility 10 (1s)' },
+  { code: '1HZ25V', label: 'Volatility 25 (1s)' },
+  { code: '1HZ75V', label: 'Volatility 75 (1s)' },
+  { code: '1HZ100V', label: 'Volatility 100 (1s)' },
 ]
 
 type Direction = 'Over' | 'Under'
@@ -40,108 +41,104 @@ function pickRandomRecommendation(): Recommendation {
   }
 }
 
-const CYCLE_SECONDS = 30
 const SCAN_DURATION_MS = 2200
 
 export default function AiScanner() {
-  const [scanning, setScanning] = useState(true)
+  const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState<Recommendation | null>(null)
-  const [secondsLeft, setSecondsLeft] = useState(CYCLE_SECONDS)
   const scanTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const runScan = () => {
     setResult(null)
     setScanning(true)
-    setSecondsLeft(CYCLE_SECONDS)
-
     scanTimeout.current = setTimeout(() => {
       setResult(pickRandomRecommendation())
       setScanning(false)
     }, SCAN_DURATION_MS)
   }
 
-  // Run once on mount
-  useEffect(() => {
-    runScan()
-    return () => {
-      if (scanTimeout.current) clearTimeout(scanTimeout.current)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Countdown + auto re-scan every 30s
-  useEffect(() => {
-    if (scanning) return
-
-    const interval = setInterval(() => {
-      setSecondsLeft(prev => {
-        if (prev <= 1) {
-          runScan()
-          return CYCLE_SECONDS
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scanning])
+  const logout = () => {
+    localStorage.removeItem('deriv_token')
+    window.location.href = '/login'
+  }
 
   return (
-    <div style={{ padding: '1rem', color: '#fff' }}>
-      <h1 style={{ fontSize: '1.4rem', marginBottom: '0.25rem' }}>AI Scanner</h1>
-      <p style={{ color: '#9a9ab0', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-        Trade responsibly.
-      </p>
+    <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
 
-      <div
-        style={{
-          background: '#1a1a2e',
-          borderRadius: '12px',
-          padding: '2rem',
-          textAlign: 'center',
-          minHeight: '220px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '0.75rem',
-        }}
-      >
-        {scanning && (
-          <>
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                border: '4px solid #2e2e4d',
-                borderTopColor: '#6c63ff',
-                animation: 'ai-scanner-spin 0.9s linear infinite',
-              }}
-            />
-            <p style={{ color: '#9a9ab0', fontSize: '0.9rem' }}>Scanning markets...</p>
-          </>
-        )}
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
+        <button onClick={logout} style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Logout</button>
+      </div>
+      <NavBar />
 
-        {!scanning && result && (
-          <>
-            <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{result.market.label}</h2>
-            <p style={{ margin: 0, fontSize: '1rem' }}>
-              Direction:{' '}
-              <strong style={{ color: '#6c63ff' }}>{result.direction}</strong>
-            </p>
-            <p style={{ margin: 0, fontSize: '0.95rem' }}>
-              First digit: <strong>{result.firstDigit}</strong>
-            </p>
-            <p style={{ margin: 0, fontSize: '0.95rem' }}>
-              Recovery digit: <strong>{result.recoveryDigit}</strong>
-            </p>
-            <p style={{ color: '#9a9ab0', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-              Next scan in {secondsLeft}s
-            </p>
-          </>
-        )}
+      {/* Scanner Panel */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
+        <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
+          Demo feature - the market and digits below are chosen at random. This is not real market analysis.
+        </p>
+
+        <div
+          style={{
+            background: '#0a0a1a',
+            borderRadius: '8px',
+            padding: '2rem 1rem',
+            marginTop: '1rem',
+            minHeight: '200px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '0.75rem',
+            textAlign: 'center',
+          }}
+        >
+          {!scanning && !result && (
+            <button
+              onClick={runScan}
+              style={{ padding: '1rem 2rem', background: '#6c63ff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
+            >
+              Scan
+            </button>
+          )}
+
+          {scanning && (
+            <>
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  border: '4px solid #2e2e4d',
+                  borderTopColor: '#6c63ff',
+                  animation: 'ai-scanner-spin 0.9s linear infinite',
+                }}
+              />
+              <p style={{ color: '#aaa', fontSize: '0.9rem' }}>Scanning markets...</p>
+            </>
+          )}
+
+          {!scanning && result && (
+            <>
+              <h2 style={{ margin: 0, fontSize: '1.15rem' }}>{result.market.label}</h2>
+              <p style={{ margin: 0, fontSize: '1rem' }}>
+                Direction: <strong style={{ color: '#6c63ff' }}>{result.direction}</strong>
+              </p>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>
+                First digit: <strong>{result.firstDigit}</strong>
+              </p>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>
+                Recovery digit: <strong>{result.recoveryDigit}</strong>
+              </p>
+              <button
+                onClick={runScan}
+                style={{ marginTop: '0.5rem', padding: '0.75rem 1.5rem', background: 'transparent', color: '#fff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold' }}
+              >
+                Scan Again
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <style>{`
