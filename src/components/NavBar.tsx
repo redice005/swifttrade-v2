@@ -8,6 +8,7 @@ export default function NavBar() {
     { label: ' Manual trading', path: '/dashboard' },
     { label: ' Free Bots', path: '/bots' },
     { label: ' Analysis', path: '/analysis' },
+    { label: ' AI Scanner', path: '/ai-scanner' },
   ]
 
   return (
