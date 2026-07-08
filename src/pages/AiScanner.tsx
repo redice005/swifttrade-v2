@@ -41,19 +41,33 @@ function pickRandomRecommendation(): Recommendation {
   }
 }
 
-const SCAN_DURATION_MS = 2200
+const SCAN_DURATION_MS = 10000
+const COOLDOWN_SECONDS = 30
 
 export default function AiScanner() {
   const [scanning, setScanning] = useState(false)
   const [result, setResult] = useState<Recommendation | null>(null)
+  const [cooldown, setCooldown] = useState(0)
   const scanTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cooldownInterval = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const runScan = () => {
+    if (cooldown > 0) return
     setResult(null)
     setScanning(true)
     scanTimeout.current = setTimeout(() => {
       setResult(pickRandomRecommendation())
       setScanning(false)
+      setCooldown(COOLDOWN_SECONDS)
+      cooldownInterval.current = setInterval(() => {
+        setCooldown(prev => {
+          if (prev <= 1) {
+            if (cooldownInterval.current) clearInterval(cooldownInterval.current)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
     }, SCAN_DURATION_MS)
   }
 
@@ -132,9 +146,10 @@ export default function AiScanner() {
               </p>
               <button
                 onClick={runScan}
-                style={{ marginTop: '0.5rem', padding: '0.75rem 1.5rem', background: 'transparent', color: '#fff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold' }}
+                disabled={cooldown > 0}
+                style={{ marginTop: '0.5rem', padding: '0.75rem 1.5rem', background: 'transparent', color: cooldown > 0 ? '#555' : '#fff', border: `1px solid ${cooldown > 0 ? '#333' : '#6c63ff'}`, borderRadius: '8px', cursor: cooldown > 0 ? 'not-allowed' : 'pointer', fontSize: '0.9rem', fontWeight: 'bold' }}
               >
-                Scan Again
+                {cooldown > 0 ? `Scan Again in ${cooldown}s` : 'Scan Again'}
               </button>
             </>
           )}
