@@ -82,7 +82,6 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
 
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
         <button onClick={logout} style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Logout</button>
@@ -90,17 +89,17 @@ export default function Dashboard() {
       <NavBar />
 
       {/* Balance Card */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <button onClick={() => setAccountType('demo')}
-            style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '0.35rem', borderRadius: '8px', border: 'none', background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
             Demo</button>
           <button onClick={() => setAccountType('real')}
-            style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: accountType === 'real' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '0.35rem', borderRadius: '8px', border: 'none', background: accountType === 'real' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
             Real</button>
         </div>
-        <p style={{ color: '#aaa', margin: 0 }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
-        <h2 style={{ margin: '0.5rem 0 0', fontSize: '2rem' }}>
+        <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
+        <h2 style={{ margin: '0.25rem 0 0', fontSize: '1.3rem' }}>
           {balance !== null ? `${balance.toFixed(2)}` : status === 'open' ? 'Loading...' : 'Connecting...'}
         </h2>
       </div>
