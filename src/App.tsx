@@ -1,6 +1,7 @@
 // v2 routes
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { DerivProvider } from '@/context/DerivContext'
+import { AiScannerProvider } from '@/context/AiScannerContext'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Callback from '@/pages/Callback'
@@ -15,13 +16,15 @@ function ProtectedRoutes() {
 
   return (
     <DerivProvider>
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/bots" element={<Bots />} />
-        <Route path="/analysis" element={<Analysis />} />
-        <Route path="/ai-scanner" element={<AiScanner />} />
-        <Route path="*" element={<Navigate to="/dashboard" />} />
-      </Routes>
+      <AiScannerProvider>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/bots" element={<Bots />} />
+          <Route path="/analysis" element={<Analysis />} />
+          <Route path="/ai-scanner" element={<AiScanner />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </AiScannerProvider>
     </DerivProvider>
   )
 }
