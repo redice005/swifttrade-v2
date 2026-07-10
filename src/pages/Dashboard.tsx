@@ -3,7 +3,7 @@ import { useDeriv } from '@/context/DerivContext'
 import NavBar from '@/components/NavBar'
 
 export default function Dashboard() {
-  const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
+  const { status, balance, currency, accountType, setAccountType, send, subscribe, allAccounts } = useDeriv()
   const [market, setMarket] = useState('R_100')
   const [stake, setStake] = useState('10')
   const [duration, setDuration] = useState('5')
@@ -12,6 +12,11 @@ export default function Dashboard() {
   const [message, setMessage] = useState('')
   const [contractCategory, setContractCategory] = useState('rise_fall')
   const [barrier, setBarrier] = useState('5')
+  const [showTransfer, setShowTransfer] = useState(false)
+  const [transferAmount, setTransferAmount] = useState('')
+  const [transferDirection, setTransferDirection] = useState<'toOptions' | 'toWallet'>('toOptions')
+  const [transferMsg, setTransferMsg] = useState('')
+  const [transferring, setTransferring] = useState(false)
 
   useEffect(() => {
     if (status !== 'open') return
@@ -41,17 +46,72 @@ export default function Dashboard() {
         const contract = data.proposal_open_contract
         if (contract.contract_id !== activeContractId) return
         if (contract.status === 'won') {
-          setMessage(`✅ Won! Profit: +${contract.profit} ${currency}`)
+          setMessage(`Won! Profit: +${contract.profit} ${currency}`)
           setLoading(false)
         } else if (contract.status === 'lost') {
-          setMessage(`❌ Lost! -${contract.buy_price} ${currency}`)
+          setMessage(`Lost! -${contract.buy_price} ${currency}`)
           setLoading(false)
+        }
+      }
+      if (data.msg_type === 'transfer_between_accounts') {
+        setTransferring(false)
+        if (data.error) {
+          setTransferMsg(`Error: ${data.error.message}`)
+        } else {
+          setTransferMsg('Transfer successful!')
+          setTransferAmount('')
+          send({ balance: 1, subscribe: 1 })
+          setTimeout(() => {
+            setShowTransfer(false)
+            setTransferMsg('')
+          }, 1500)
         }
       }
     })
     send({ ticks: market, subscribe: 1 })
     return () => { unsub() }
   }, [status, market])
+
+  const handleTransfer = () => {
+    const amount = parseFloat(transferAmount)
+    if (!amount || amount <= 0) {
+      setTransferMsg('Enter a valid amount')
+      return
+    }
+
+    const walletAcc = allAccounts.find((a: any) =>
+      a.account_type === 'wallet' || a.account_category === 'wallet'
+    )
+    const optionsAcc = allAccounts.find((a: any) =>
+      a.account_type === 'trading' || a.account_type === 'options' || a.account_category === 'trading'
+    )
+
+    if (!walletAcc || !optionsAcc) {
+      setTransferMsg('Could not find accounts. Try again.')
+      return
+    }
+
+    setTransferring(true)
+    setTransferMsg('')
+
+    if (transferDirection === 'toOptions') {
+      send({
+        transfer_between_accounts: 1,
+        account_from: walletAcc.loginid,
+        account_to: optionsAcc.loginid,
+        amount,
+        currency: 'USD',
+      })
+    } else {
+      send({
+        transfer_between_accounts: 1,
+        account_from: optionsAcc.loginid,
+        account_to: walletAcc.loginid,
+        amount,
+        currency: 'USD',
+      })
+    }
+  }
 
   const placeContract = (type: string) => {
     if (!send) return
@@ -83,7 +143,7 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
+        <h1 style={{ color: '#6c63ff', margin: 0 }}>Swift Trade</h1>
         <button onClick={logout} style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>Logout</button>
       </div>
       <NavBar />
@@ -99,10 +159,73 @@ export default function Dashboard() {
             Real</button>
         </div>
         <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
-        <h2 style={{ margin: '0.25rem 0 0', fontSize: '1.3rem' }}>
-          {balance !== null ? `${balance.toFixed(2)}` : status === 'open' ? 'Loading...' : 'Connecting...'}
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: '0.25rem 0 0', fontSize: '1.3rem' }}>
+            {balance !== null ? `${balance.toFixed(2)}` : status === 'open' ? 'Loading...' : 'Connecting...'}
+          </h2>
+          {accountType === 'real' && (
+            <button
+              onClick={() => { setShowTransfer(true); setTransferMsg(''); setTransferAmount('') }}
+              style={{ background: 'rgba(108, 99, 255, 0.15)', color: '#6c63ff', border: '1px solid #6c63ff', padding: '0.3rem 0.75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', marginTop: '0.25rem' }}
+            >
+              Transfer
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Transfer Modal */}
+      {showTransfer && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+        }}>
+          <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', width: '100%', maxWidth: '380px', border: '1px solid rgba(108,99,255,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>Transfer Funds</h3>
+              <button onClick={() => setShowTransfer(false)}
+                style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>X</button>
+            </div>
+
+            <p style={{ color: '#aaa', fontSize: '0.8rem', margin: '0 0 0.75rem' }}>Direction</p>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button
+                onClick={() => setTransferDirection('toOptions')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: transferDirection === 'toOptions' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.8rem' }}>
+                Wallet → Options
+              </button>
+              <button
+                onClick={() => setTransferDirection('toWallet')}
+                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: transferDirection === 'toWallet' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.8rem' }}>
+                Options → Wallet
+              </button>
+            </div>
+
+            <p style={{ color: '#aaa', fontSize: '0.8rem', margin: '0 0 0.5rem' }}>Amount (USD)</p>
+            <input
+              type="number"
+              placeholder="0.00"
+              value={transferAmount}
+              onChange={e => setTransferAmount(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: '1px solid #333', borderRadius: '8px', marginBottom: '1rem', boxSizing: 'border-box', fontSize: '1rem', outline: 'none' }}
+            />
+
+            {transferMsg && (
+              <p style={{ color: transferMsg.includes('Error') ? '#ef4444' : '#22c55e', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 'bold' }}>
+                {transferMsg}
+              </p>
+            )}
+
+            <button
+              onClick={handleTransfer}
+              disabled={transferring}
+              style={{ width: '100%', padding: '0.85rem', background: transferring ? '#333' : 'linear-gradient(135deg, #6c63ff, #8b5cf6)', color: '#fff', border: 'none', borderRadius: '8px', cursor: transferring ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+              {transferring ? 'Transferring...' : 'Confirm Transfer'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Market */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
@@ -178,10 +301,10 @@ export default function Dashboard() {
           {contractCategory === 'rise_fall' && <>
             <button onClick={() => placeContract('CALL')} disabled={loading}
               style={{ flex: 1, padding: '1rem', background: loading ? '#333' : '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-              ⬆ Rise</button>
+              Rise</button>
             <button onClick={() => placeContract('PUT')} disabled={loading}
               style={{ flex: 1, padding: '1rem', background: loading ? '#333' : '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-              ⬇ Fall</button>
+              Fall</button>
           </>}
           {contractCategory === 'even_odd' && <>
             <button onClick={() => placeContract('DIGITEVEN')} disabled={loading}
