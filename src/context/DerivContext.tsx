@@ -7,9 +7,11 @@ type DerivContextType = {
   send: (payload: Record<string, any>) => number | null
   subscribe: (listener: (data: any) => void) => () => void
   balance: number | null
+  walletBalance: number | null
   currency: string
   accountType: 'demo' | 'real'
   setAccountType: (type: 'demo' | 'real') => void
+  allAccounts: any[]
 }
 
 const DerivContext = createContext<DerivContextType | null>(null)
@@ -18,10 +20,11 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   const [accountType, setAccountType] = useState<'demo' | 'real'>('demo')
   const [wsUrl, setWsUrl] = useState<string | null>(null)
   const [balance, setBalance] = useState<number | null>(null)
+  const [walletBalance, setWalletBalance] = useState<number | null>(null)
   const [currency, setCurrency] = useState('USD')
   const [token, setToken] = useState<string | null>(null)
+  const [allAccounts, setAllAccounts] = useState<any[]>([])
 
-  // Read token reactively — not just once at mount
   useEffect(() => {
     const t = localStorage.getItem('deriv_token')
     if (!t) {
@@ -44,6 +47,7 @@ export function DerivProvider({ children }: { children: ReactNode }) {
           window.location.href = '/login'
           return
         }
+        setAllAccounts(accs)
         const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
         const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
         if (!url) {
@@ -70,13 +74,31 @@ export function DerivProvider({ children }: { children: ReactNode }) {
         setBalance(data.balance.balance)
         setCurrency(data.balance.currency)
       }
+      if (data.msg_type === 'account_list') {
+        // Find wallet account and fetch its balance
+        const accounts = data.account_list
+        const wallet = accounts.find((a: any) =>
+          a.account_type === 'wallet' || a.account_category === 'wallet'
+        )
+        if (wallet) {
+          send({ balance: 1, account: wallet.loginid })
+        }
+      }
+      if (data.msg_type === 'transfer_between_accounts') {
+        if (!data.error) {
+          // Refresh balance after transfer
+          send({ balance: 1, subscribe: 1 })
+          send({ account_list: 1 })
+        }
+      }
     })
     send({ balance: 1, subscribe: 1 })
+    send({ account_list: 1 })
     return () => { unsub() }
   }, [status])
 
   return (
-    <DerivContext.Provider value={{ status, send, subscribe, balance, currency, accountType, setAccountType }}>
+    <DerivContext.Provider value={{ status, send, subscribe, balance, walletBalance, currency, accountType, setAccountType, allAccounts }}>
       {children}
     </DerivContext.Provider>
   )
