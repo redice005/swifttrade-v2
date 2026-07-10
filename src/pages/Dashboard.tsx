@@ -100,20 +100,19 @@ export default function Dashboard() {
         </div>
         <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
 
-        {/* Balance row with Deposit + Transfer buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
           <h2 style={{ margin: 0, fontSize: '1.3rem' }}>
             {balance !== null ? `${balance.toFixed(2)}` : status === 'open' ? 'Loading...' : 'Connecting...'}
           </h2>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
             <button
-              onClick={() => window.open('https://app.deriv.com/cashier/deposit', '_blank')}
+              onClick={() => window.open('https://home.deriv.com/dashboard/deposit?from=home', '_blank')}
               style={{ padding: '0.3rem 0.7rem', background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid #22c55e', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
             >
               Deposit
             </button>
             <button
-              onClick={() => window.open('https://app.deriv.com/cashier/transfer', '_blank')}
+              onClick={() => window.open('https://home.deriv.com/dashboard/transfer?from=home', '_blank')}
               style={{ padding: '0.3rem 0.7rem', background: 'rgba(108,99,255,0.15)', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
             >
               Transfer
