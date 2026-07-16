@@ -9,6 +9,7 @@ export default function NavBar() {
     { label: ' Free Bots', path: '/bots' },
     { label: ' Analysis', path: '/analysis' },
     { label: ' AI Scanner', path: '/ai-scanner' },
+    { label: ' Get Funded', path: '/funded' },
   ]
 
   return (
