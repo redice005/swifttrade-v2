@@ -8,6 +8,7 @@ import Callback from '@/pages/Callback'
 import Bots from '@/pages/Bots'
 import Analysis from '@/pages/Analysis'
 import AiScanner from '@/pages/AiScanner'
+import Funded from '@/pages/Funded'
 import { useState, useEffect } from 'react'
 
 function ProtectedRoutes() {
@@ -22,6 +23,7 @@ function ProtectedRoutes() {
           <Route path="/bots" element={<Bots />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/ai-scanner" element={<AiScanner />} />
+          <Route path="/funded" element={<Funded />} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </AiScannerProvider>
