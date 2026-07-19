@@ -92,8 +92,8 @@ export default function Funded() {
               <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>CHALLENGE RULES</p>
               {[
                 { text: 'Deposit a minimum of $1 on a real Deriv account' },
-                { text: 'Trade for 5 consecutive days' },
-                { text: 'Hit a minimum profit of $10 per day' },
+                { text: 'Trade for 3 profitable days within 5 calendar days' },
+                { text: 'Hit a minimum profit of $5 on each of the 3 days' },
                 { text: 'Do not lose more than $50 in a single day' },
                 { text: '2% share rate applied on your funded payouts' },
               ].map((rule, i) => (
