@@ -337,19 +337,13 @@ export default function Bots() {
             <option value="R_50">Volatility 50</option>
             <option value="R_75">Volatility 75</option>
             <option value="R_100">Volatility 100</option>
-            <option value="R_150">Volatility 150</option>
-            <option value="R_200">Volatility 200</option>
           </optgroup>
           <optgroup label="Volatility Indices (1s)">
             <option value="1HZ10V">Volatility 10 (1s)</option>
-            <option value="1HZ15V">Volatility 15 (1s)</option>
             <option value="1HZ25V">Volatility 25 (1s)</option>
-            <option value="1HZ30V">Volatility 30 (1s)</option>
             <option value="1HZ50V">Volatility 50 (1s)</option>
             <option value="1HZ75V">Volatility 75 (1s)</option>
             <option value="1HZ100V">Volatility 100 (1s)</option>
-            <option value="1HZ150V">Volatility 150 (1s)</option>
-            <option value="1HZ200V">Volatility 200 (1s)</option>
           </optgroup>
         </select>
       </div>
@@ -376,12 +370,16 @@ export default function Bots() {
                 style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                 Under</button>
             </div>
-            <p style={labelStyle}>First Digit (0-9)</p>
+            <p style={labelStyle}>Prediction before loss</p>
             <select value={ouDigit1} onChange={e => setOuDigit1(e.target.value)} style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-            <p style={labelStyle}>Second Digit (0-9)</p>
+            <p style={labelStyle}>Prediction after loss</p>
             <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
+              {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <p style={labelStyle}>Entry Digit (0-9)</p>
+            <select defaultValue="7" style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
             <p style={labelStyle}>Starting Stake (USD)</p>
@@ -403,6 +401,10 @@ export default function Bots() {
                 style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                 Odd</button>
             </div>
+            <p style={labelStyle}>Entry Digit (0-9)</p>
+            <select defaultValue="7" style={inputStyle}>
+              {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
             <p style={labelStyle}>Starting Stake (USD)</p>
             <input type="number" value={eoStake} onChange={e => setEoStake(e.target.value)} style={inputStyle} />
             <p style={labelStyle}>Stop Loss (USD)</p>
