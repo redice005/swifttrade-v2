@@ -378,15 +378,15 @@ export default function Bots() {
             <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-            <p style={labelStyle}>Entry Digit (0-9)</p>
+            <p style={labelStyle}>Entry Digit</p>
             <select defaultValue="7" style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-            <p style={labelStyle}>Starting Stake (USD)</p>
+            <p style={labelStyle}>Stake</p>
             <input type="number" value={ouStake} onChange={e => setOuStake(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Stop Loss (USD)</p>
+            <p style={labelStyle}>Stop Loss</p>
             <input type="number" value={ouStopLoss} onChange={e => setOuStopLoss(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Take Profit (USD)</p>
+            <p style={labelStyle}>Take Profit</p>
             <input type="number" value={ouTakeProfit} onChange={e => setOuTakeProfit(e.target.value)} style={inputStyle} />
           </>
         ) : (
@@ -401,15 +401,15 @@ export default function Bots() {
                 style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
                 Odd</button>
             </div>
-            <p style={labelStyle}>Entry Digit (0-9)</p>
+            <p style={labelStyle}>Entry Digit</p>
             <select defaultValue="7" style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-            <p style={labelStyle}>Starting Stake (USD)</p>
+            <p style={labelStyle}>Stake</p>
             <input type="number" value={eoStake} onChange={e => setEoStake(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Stop Loss (USD)</p>
+            <p style={labelStyle}>Stop Loss</p>
             <input type="number" value={eoStopLoss} onChange={e => setEoStopLoss(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Take Profit (USD)</p>
+            <p style={labelStyle}>Take Profit</p>
             <input type="number" value={eoTakeProfit} onChange={e => setEoTakeProfit(e.target.value)} style={inputStyle} />
           </>
         )}
