@@ -248,9 +248,6 @@ export default function Analysis() {
           <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
             {status === 'open' ? '🟢 Live' : '🔴 Connecting...'}
           </span>
-          <span style={{ color: '#555', fontSize: '0.75rem' }}>
-            {historyLoaded ? `${allDigits.length} ticks loaded` : 'Loading history...'}
-          </span>
         </div>
       </div>
 
@@ -319,7 +316,7 @@ export default function Analysis() {
       {/* Digit Circles — always 1000 ticks */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
-          DIGIT DISTRIBUTION (last {allDigits.length} ticks)
+          DIGIT DISTRIBUTION
         </p>
         <div className="digit-grid">
           {Array.from({ length: 10 }, (_, i) => {
@@ -357,7 +354,7 @@ export default function Analysis() {
       {/* Digit Bars — always 1000 ticks */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
-          DIGIT BARS (last {allDigits.length} ticks)
+          DIGIT BARS
         </p>
         {Array.from({ length: 10 }, (_, i) => {
           const pct = percentages[i]
