@@ -19,6 +19,7 @@ export default function Analysis() {
   })
   const [pulse, setPulse] = useState(false)
   const [viewWindow, setViewWindow] = useState<50 | 100 | 200>(50)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
 
   const { status, send, subscribe } = useDeriv()
   const currentMarketRef = useRef(market)
@@ -30,28 +31,38 @@ export default function Analysis() {
     localStorage.setItem(`tickCount_${market}`, tickCount.toString())
   }, [digits, tickCount, market])
 
-  // On market change or socket open — load from storage and subscribe
   useEffect(() => {
     if (status !== 'open') return
 
-    // Always load from storage on market change — continuous across all sessions
-    try {
-      const saved = localStorage.getItem(`digits_${market}`)
-      const savedCount = localStorage.getItem(`tickCount_${market}`)
-      setDigits(saved ? JSON.parse(saved) : [])
-      setTickCount(savedCount ? parseInt(savedCount) : 0)
-    } catch {
-      setDigits([])
-      setTickCount(0)
-    }
-
+    setHistoryLoaded(false)
     setLastDigit(null)
     currentMarketRef.current = market
 
+    // Load from localStorage first so we have something immediately
+    try {
+      const saved = localStorage.getItem(`digits_${market}`)
+      const savedCount = localStorage.getItem(`tickCount_${market}`)
+      if (saved) {
+        setDigits(JSON.parse(saved))
+        setTickCount(savedCount ? parseInt(savedCount) : 0)
+      }
+    } catch { /* ignore */ }
+
     const unsub = subscribe((data) => {
+      // Handle history response — fills last 1000 ticks instantly
+      if (data.msg_type === 'history') {
+        const prices: number[] = data.history.prices
+        const histDigits = prices.map((p: number) =>
+          parseInt(p.toFixed(2).slice(-1))
+        )
+        setDigits(histDigits.slice(-1000))
+        setTickCount(histDigits.length)
+        setHistoryLoaded(true)
+      }
+
+      // Live ticks — append after history is loaded
       if (data.msg_type === 'tick') {
         const price = data.tick.quote
-        // Fix: force 2 decimal places before slicing to catch trailing zeros
         const digit = parseInt(price.toFixed(2).slice(-1))
         setLastDigit(digit)
         setPulse(true)
@@ -64,15 +75,25 @@ export default function Analysis() {
       }
     })
 
+    // Fetch last 1000 ticks history immediately
+    send({
+      ticks_history: market,
+      count: 1000,
+      end: 'latest',
+      style: 'ticks',
+    })
+
+    // Subscribe to live ticks
     send({ ticks: market, subscribe: 1 })
 
     return () => { unsub() }
   }, [status, market])
 
-  // viewWindow affects circles and Over/Under only
+  // Over/Under uses viewWindow
   const visibleDigits = digits.slice(-viewWindow)
-  // Bars always show full 1000-tick history independently
-  const barDigits = digits.slice(-1000)
+
+  // Circles and bars always use full 1000
+  const allDigits = digits.slice(-1000)
 
   const getPercentages = (source: number[]) => {
     if (source.length === 0) return Array(10).fill(0)
@@ -103,14 +124,11 @@ export default function Analysis() {
     return count >= 2 ? { digit: last, count } : null
   }
 
-  const percentages = getPercentages(visibleDigits)
-  const barPercentages = getPercentages(barDigits)
+  const percentages = getPercentages(allDigits)
   const overUnder = getOverUnder()
-  const hasEnoughData = visibleDigits.length >= viewWindow
+  const hasEnoughData = allDigits.length >= 100
   const maxPct = Math.max(...percentages)
   const minPct = Math.min(...percentages)
-  const barMaxPct = Math.max(...barPercentages)
-  const barMinPct = Math.min(...barPercentages)
   const streak = getStreak()
 
   const logout = () => {
@@ -230,13 +248,15 @@ export default function Analysis() {
           <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
             {status === 'open' ? '🟢 Live' : '🔴 Connecting...'}
           </span>
-          <span style={{ color: '#555', fontSize: '0.75rem' }}>{tickCount} ticks total</span>
+          <span style={{ color: '#555', fontSize: '0.75rem' }}>
+            {historyLoaded ? `${allDigits.length} ticks loaded` : 'Loading history...'}
+          </span>
         </div>
       </div>
 
-      {/* Tick Window Selector */}
+      {/* Over/Under Tick Window Selector */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem 1.5rem', marginBottom: '1rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 0.75rem', fontSize: '0.8rem' }}>ANALYSE LAST</p>
+        <p style={{ color: '#aaa', margin: '0 0 0.75rem', fontSize: '0.8rem' }}>OVER / UNDER — ANALYSE LAST</p>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {([50, 100, 200] as const).map(n => (
             <button
@@ -277,7 +297,7 @@ export default function Analysis() {
         </div>
       )}
 
-      {/* Over 5 / Under 5 */}
+      {/* Over 5 / Under 5 — uses viewWindow */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
           OVER 5 / UNDER 5 (last {visibleDigits.length} ticks)
@@ -296,10 +316,10 @@ export default function Analysis() {
         </div>
       </div>
 
-      {/* Digit Circles — based on viewWindow */}
+      {/* Digit Circles — always 1000 ticks */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
-          DIGIT DISTRIBUTION (last {visibleDigits.length} ticks)
+          DIGIT DISTRIBUTION (last {allDigits.length} ticks)
         </p>
         <div className="digit-grid">
           {Array.from({ length: 10 }, (_, i) => {
@@ -334,15 +354,15 @@ export default function Analysis() {
         </div>
       </div>
 
-      {/* Digit Bars — always last 1000 ticks independently */}
+      {/* Digit Bars — always 1000 ticks */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
-          DIGIT BARS (last {barDigits.length} ticks)
+          DIGIT BARS (last {allDigits.length} ticks)
         </p>
         {Array.from({ length: 10 }, (_, i) => {
-          const pct = barPercentages[i]
-          const isHot = barDigits.length >= 100 && pct === barMaxPct
-          const isCold = barDigits.length >= 100 && pct === barMinPct
+          const pct = percentages[i]
+          const isHot = hasEnoughData && pct === maxPct
+          const isCold = hasEnoughData && pct === minPct
           const isLast = lastDigit === i
 
           let barColor = '#3d3d5c'
