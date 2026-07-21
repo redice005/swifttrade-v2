@@ -22,31 +22,27 @@ export default function Analysis() {
 
   const { status, send, subscribe } = useDeriv()
   const currentMarketRef = useRef(market)
-  const loadedMarketsRef = useRef<Set<string>>(new Set())
 
+  // Persist to localStorage whenever digits change
   useEffect(() => {
     if (digits.length === 0) return
     localStorage.setItem(`digits_${market}`, JSON.stringify(digits))
     localStorage.setItem(`tickCount_${market}`, tickCount.toString())
   }, [digits, tickCount, market])
 
+  // On market change or socket open — load from storage and subscribe
   useEffect(() => {
     if (status !== 'open') return
 
-    // Only load from storage the FIRST time we see this market this session —
-    // never wipe/reload on every reconnect, so history keeps accumulating
-    // continuously instead of resetting on login/logout.
-    if (!loadedMarketsRef.current.has(market)) {
-      try {
-        const saved = localStorage.getItem(`digits_${market}`)
-        const savedCount = localStorage.getItem(`tickCount_${market}`)
-        setDigits(saved ? JSON.parse(saved) : [])
-        setTickCount(savedCount ? parseInt(savedCount) : 0)
-      } catch {
-        setDigits([])
-        setTickCount(0)
-      }
-      loadedMarketsRef.current.add(market)
+    // Always load from storage on market change — continuous across all sessions
+    try {
+      const saved = localStorage.getItem(`digits_${market}`)
+      const savedCount = localStorage.getItem(`tickCount_${market}`)
+      setDigits(saved ? JSON.parse(saved) : [])
+      setTickCount(savedCount ? parseInt(savedCount) : 0)
+    } catch {
+      setDigits([])
+      setTickCount(0)
     }
 
     setLastDigit(null)
@@ -55,13 +51,14 @@ export default function Analysis() {
     const unsub = subscribe((data) => {
       if (data.msg_type === 'tick') {
         const price = data.tick.quote
-        const digit = parseInt(price.toString().slice(-1))
+        // Fix: force 2 decimal places before slicing to catch trailing zeros
+        const digit = parseInt(price.toFixed(2).slice(-1))
         setLastDigit(digit)
         setPulse(true)
         setTimeout(() => setPulse(false), 600)
         setDigits(prev => {
           const updated = [...prev, digit]
-          return updated.slice(-1000) // rolling cap stays at 1000
+          return updated.slice(-1000)
         })
         setTickCount(prev => prev + 1)
       }
@@ -72,22 +69,16 @@ export default function Analysis() {
     return () => { unsub() }
   }, [status, market])
 
-  const resetAnalysis = () => {
-    localStorage.removeItem(`digits_${market}`)
-    localStorage.removeItem(`tickCount_${market}`)
-    loadedMarketsRef.current.delete(market)
-    setDigits([])
-    setTickCount(0)
-    setLastDigit(null)
-  }
-
+  // viewWindow affects circles and Over/Under only
   const visibleDigits = digits.slice(-viewWindow)
+  // Bars always show full 1000-tick history independently
+  const barDigits = digits.slice(-1000)
 
-  const getPercentages = () => {
-    if (visibleDigits.length === 0) return Array(10).fill(0)
+  const getPercentages = (source: number[]) => {
+    if (source.length === 0) return Array(10).fill(0)
     return Array.from({ length: 10 }, (_, i) => {
-      const count = visibleDigits.filter(d => d === i).length
-      return parseFloat(((count / visibleDigits.length) * 100).toFixed(1))
+      const count = source.filter(d => d === i).length
+      return parseFloat(((count / source.length) * 100).toFixed(1))
     })
   }
 
@@ -112,11 +103,14 @@ export default function Analysis() {
     return count >= 2 ? { digit: last, count } : null
   }
 
-  const percentages = getPercentages()
+  const percentages = getPercentages(visibleDigits)
+  const barPercentages = getPercentages(barDigits)
   const overUnder = getOverUnder()
   const hasEnoughData = visibleDigits.length >= viewWindow
   const maxPct = Math.max(...percentages)
   const minPct = Math.min(...percentages)
+  const barMaxPct = Math.max(...barPercentages)
+  const barMinPct = Math.min(...barPercentages)
   const streak = getStreak()
 
   const logout = () => {
@@ -132,9 +126,7 @@ export default function Analysis() {
           70% { box-shadow: 0 0 0 18px rgba(108, 99, 255, 0); }
           100% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0); }
         }
-        .last-digit-pulse {
-          animation: pulse-ring 0.6s ease-out;
-        }
+        .last-digit-pulse { animation: pulse-ring 0.6s ease-out; }
         .window-btn {
           padding: 0.35rem 0.75rem;
           border-radius: 20px;
@@ -182,21 +174,6 @@ export default function Analysis() {
           font-weight: bold;
           transition: color 0.3s ease;
         }
-        .reset-btn {
-          padding: 0.4rem 0.9rem;
-          border-radius: 8px;
-          border: 1px solid #ef4444;
-          background: transparent;
-          color: #ef4444;
-          font-size: 0.75rem;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .reset-btn:hover {
-          background: #ef4444;
-          color: #fff;
-        }
         .ou-bar-track {
           display: flex;
           width: 100%;
@@ -225,10 +202,7 @@ export default function Analysis() {
 
       {/* Market Selector */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-          <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>Select Market</p>
-          <button className="reset-btn" onClick={resetAnalysis}>↺ Reset</button>
-        </div>
+        <p style={{ color: '#aaa', margin: '0 0 0.5rem', fontSize: '0.8rem' }}>Select Market</p>
         <select value={market} onChange={e => setMarket(e.target.value)}
           style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: 'none', borderRadius: '8px' }}>
           <optgroup label="Volatility Indices">
@@ -252,11 +226,11 @@ export default function Analysis() {
             <option value="1HZ200V">Volatility 200 (1s)</option>
           </optgroup>
         </select>
-
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem', alignItems: 'center' }}>
           <span style={{ color: '#aaa', fontSize: '0.8rem' }}>
             {status === 'open' ? '🟢 Live' : '🔴 Connecting...'}
           </span>
+          <span style={{ color: '#555', fontSize: '0.75rem' }}>{tickCount} ticks total</span>
         </div>
       </div>
 
@@ -276,16 +250,11 @@ export default function Analysis() {
         </div>
       </div>
 
-      {/* Last Digit — compact */}
+      {/* Last Digit */}
       {lastDigit !== null && (
         <div style={{
-          background: '#1a1a2e',
-          borderRadius: '12px',
-          padding: '0.75rem 1.5rem',
-          marginBottom: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          background: '#1a1a2e', borderRadius: '12px', padding: '0.75rem 1.5rem',
+          marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
         }}>
           <div>
             <p style={{ color: '#aaa', margin: '0 0 0.2rem', fontSize: '0.75rem' }}>LAST DIGIT</p>
@@ -298,24 +267,17 @@ export default function Analysis() {
           <div
             className={pulse ? 'last-digit-pulse' : ''}
             style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '50%',
-              background: '#6c63ff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              boxShadow: '0 0 20px rgba(108, 99, 255, 0.5)',
-              flexShrink: 0
+              width: '60px', height: '60px', borderRadius: '50%', background: '#6c63ff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '2rem', fontWeight: 'bold',
+              boxShadow: '0 0 20px rgba(108, 99, 255, 0.5)', flexShrink: 0
             }}>
             {lastDigit}
           </div>
         </div>
       )}
 
-      {/* Over 5 / Under 5 Summary — sits above the digit grid */}
+      {/* Over 5 / Under 5 */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
           OVER 5 / UNDER 5 (last {visibleDigits.length} ticks)
@@ -329,16 +291,12 @@ export default function Analysis() {
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.6rem' }}>
-          <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            Under 5: {overUnder.under}%
-          </span>
-          <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 'bold' }}>
-            Over 5: {overUnder.over}%
-          </span>
+          <span style={{ color: '#ef4444', fontSize: '0.8rem', fontWeight: 'bold' }}>Under 5: {overUnder.under}%</span>
+          <span style={{ color: '#22c55e', fontSize: '0.8rem', fontWeight: 'bold' }}>Over 5: {overUnder.over}%</span>
         </div>
       </div>
 
-      {/* Digit Circles — fixed size, no bulge */}
+      {/* Digit Circles — based on viewWindow */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
         <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
           DIGIT DISTRIBUTION (last {visibleDigits.length} ticks)
@@ -362,32 +320,29 @@ export default function Analysis() {
 
             return (
               <div key={i} className="digit-cell">
-                <div
-                  className="digit-circle"
-                  style={{
-                    background: bgColor,
-                    border: isLast ? '3px solid #fff' : '2px solid #333',
-                    boxShadow: isLast ? '0 0 15px rgba(108, 99, 255, 0.7)' : 'none',
-                  }}
-                >
+                <div className="digit-circle" style={{
+                  background: bgColor,
+                  border: isLast ? '3px solid #fff' : '2px solid #333',
+                  boxShadow: isLast ? '0 0 15px rgba(108, 99, 255, 0.7)' : 'none',
+                }}>
                   {i}
                 </div>
-                <span className="digit-label" style={{ color: textColor }}>
-                  {pct}%
-                </span>
+                <span className="digit-label" style={{ color: textColor }}>{pct}%</span>
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Bar Chart */}
+      {/* Digit Bars — always last 1000 ticks independently */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>DIGIT BARS</p>
+        <p style={{ color: '#aaa', margin: '0 0 1rem', fontSize: '0.8rem' }}>
+          DIGIT BARS (last {barDigits.length} ticks)
+        </p>
         {Array.from({ length: 10 }, (_, i) => {
-          const pct = percentages[i]
-          const isHot = hasEnoughData && pct === maxPct
-          const isCold = hasEnoughData && pct === minPct
+          const pct = barPercentages[i]
+          const isHot = barDigits.length >= 100 && pct === barMaxPct
+          const isCold = barDigits.length >= 100 && pct === barMinPct
           const isLast = lastDigit === i
 
           let barColor = '#3d3d5c'
@@ -405,18 +360,14 @@ export default function Analysis() {
               <span style={{ color: '#fff', width: '20px', fontSize: '0.85rem', fontWeight: isLast ? 'bold' : 'normal' }}>{i}</span>
               <div style={{ flex: 1, background: '#0a0a1a', borderRadius: '4px', height: '20px', overflow: 'hidden' }}>
                 <div style={{
-                  width: `${pct}%`,
-                  height: '100%',
-                  background: barColor,
-                  borderRadius: '4px',
-                  transition: 'width 0.3s ease'
+                  width: `${pct}%`, height: '100%', background: barColor,
+                  borderRadius: '4px', transition: 'width 0.3s ease'
                 }} />
               </div>
               <span style={{ color: labelColor, width: '45px', fontSize: '0.8rem', fontWeight: 'bold' }}>{pct}%</span>
             </div>
           )
         })}
-
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
           <span style={{ color: '#22c55e', fontSize: '0.75rem' }}>🟢 Most frequent</span>
           <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>🔴 Least frequent</span>
