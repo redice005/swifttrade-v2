@@ -54,7 +54,7 @@ export default function Funded() {
         <div style={{ border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', padding: '1rem', background: 'rgba(245, 158, 11, 0.04)' }}>
           <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.25rem', letterSpacing: '0.05em' }}>FUNDED TRADING</p>
           <p style={{ color: '#aaa', fontSize: '0.82rem', margin: '0 0 0.75rem' }}>
-            Don't have capital? Get funded trading capital from <span style={{ color: '#fff', fontWeight: 'bold' }}>$500 USD</span>
+            Don't have capital? Get the opportunity to receive <span style={{ color: '#fff', fontWeight: 'bold' }}>$500</span> in trading capital.
           </p>
           <button
             onClick={() => { setShowFunding(true); setChallengeStarted(false); setEmail(''); setEmailError('') }}
@@ -80,7 +80,7 @@ export default function Funded() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div>
                 <p style={{ color: '#f59e0b', fontSize: '0.7rem', fontWeight: 'bold', margin: '0 0 0.2rem', letterSpacing: '0.06em' }}>FUNDED CHALLENGE</p>
-                <h2 style={{ color: '#fff', margin: 0, fontSize: '1.3rem' }}>Get $500 Trading Capital</h2>
+                <h2 style={{ color: '#fff', margin: 0, fontSize: '1.3rem' }}>Get Funded — $500 Trading Capital</h2>
               </div>
               <button onClick={() => setShowFunding(false)}
                 style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.3rem', lineHeight: 1 }}>
@@ -89,13 +89,13 @@ export default function Funded() {
             </div>
 
             <div style={{ background: '#0a0a1a', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem' }}>
-              <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>CHALLENGE RULES</p>
+              <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>FUNDING CONDITIONS</p>
               {[
-                { text: 'Deposit a minimum of $1 on a real Deriv account' },
-                { text: 'Trade for 3 profitable days within 5 calendar days' },
-                { text: 'Hit a minimum profit of $5 on each of the 3 days' },
+                { text: 'Trade consistently throughout the 4-week period' },
+                { text: 'Maintain responsible risk management' },
                 { text: 'Do not lose more than $50 in a single day' },
-                { text: '2% share rate applied on your funded payouts' },
+                { text: 'Traders are selected based on consistency and disciplined trading performance, not simply on the amount of profit generated' },
+                { text: 'A 2% share rate applies to funded payouts' },
               ].map((rule, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', marginBottom: i < 4 ? '0.6rem' : 0 }}>
                   <span style={{ color: '#f59e0b', fontSize: '0.8rem', flexShrink: 0, marginTop: '0.1rem' }}>—</span>
@@ -143,12 +143,12 @@ export default function Funded() {
             ) : (
               <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
                 <p style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '1rem', margin: '0 0 0.5rem' }}>
-                  You are on track!
+                  Your funding journey has begun!
                 </p>
                 <p style={{ color: '#aaa', fontSize: '0.83rem', margin: '0 0 1.25rem', lineHeight: 1.6 }}>
                   A confirmation has been sent to you,If you don't see our email within a minute, please check your Promotions or Spam{' '}
                   <span style={{ color: '#fff', fontWeight: 'bold' }}>{email}</span>.
-                  We will email you as soon as the funding condition is met.
+                  We will notify you at this email address if you are selected to receive $500 in trading capital.
                 </p>
                 <button
                   onClick={() => setShowFunding(false)}
