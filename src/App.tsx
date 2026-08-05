@@ -5,6 +5,7 @@ import { AiScannerProvider } from '@/context/AiScannerContext'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Callback from '@/pages/Callback'
+import Strategies from '@/pages/Strategies'
 import Bots from '@/pages/Bots'
 import Analysis from '@/pages/Analysis'
 import AiScanner from '@/pages/AiScanner'
@@ -20,6 +21,7 @@ function ProtectedRoutes() {
       <AiScannerProvider>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
+           <Route path="/strategies" element={<Strategies/>} />
           <Route path="/bots" element={<Bots />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/ai-scanner" element={<AiScanner />} />
