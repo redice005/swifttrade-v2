@@ -1,11 +1,18 @@
-import NavBar from '../components/NavBar'
+import NavBar from '@/components/NavBar'
 
 export default function Strategies() {
   return (
-    <div>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0a0a1a',
+        color: '#fff',
+        padding: '1rem',
+      }}
+    >
       <NavBar />
       <h1>Strategies</h1>
-      <p>Trading strategies will appear here.</p>
+      <p>Test page</p>
     </div>
   )
 }
