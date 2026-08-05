@@ -91,7 +91,7 @@ export default function Funded() {
             <div style={{ background: '#0a0a1a', borderRadius: '10px', padding: '1rem', marginBottom: '1.25rem' }}>
               <p style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 'bold', margin: '0 0 0.75rem', letterSpacing: '0.05em' }}>FUNDING CONDITIONS</p>
               {[
-                { text: 'Trade consistently throughout the 4-week period' },
+                { text: 'Trade consistently throughout any 4-week period' },
                 { text: 'Maintain responsible risk management' },
                 { text: 'Do not lose more than $50 in a single day' },
                 { text: 'Traders are selected based on consistency and disciplined trading performance, not simply on the amount of profit generated' },
