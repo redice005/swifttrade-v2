@@ -6,6 +6,7 @@ export default function NavBar() {
 
   const tabs = [
     { label: 'Manual trading', path: '/dashboard' },
+    { label: 'Strategies',path: '/strategies'},
     { label: 'Free Bots', path: '/bots' },
     { label: 'Analysis', path: '/analysis' },
     { label: 'AI Scanner', path: '/ai-scanner' },
