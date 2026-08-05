@@ -68,7 +68,7 @@ export default function Dashboard() {
           resetTradeState()
           setMessage(`Error: ${data.error.message}`)
         } else {
-          setPlacing(false)
+          // Keep placing=true — trade still in flight
           send({ buy: data.proposal.id, price: parseFloat(stake) })
           startTradeTimeout(retryPayloadRef.current)
         }
@@ -81,6 +81,7 @@ export default function Dashboard() {
           resetTradeState()
           setMessage(`Error: ${data.error.message}`)
         } else {
+          // Keep placing=true — waiting for contract to settle
           activeContractIdRef.current = data.buy.contract_id
           send({ proposal_open_contract: 1, subscribe: 1, contract_id: data.buy.contract_id })
         }
@@ -164,8 +165,6 @@ export default function Dashboard() {
 
       {/* Balance Card */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
-
-        {/* Compact Demo/Real toggle */}
         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.6rem', width: 'fit-content' }}>
           <button onClick={() => setAccountType('demo')}
             style={{ padding: '0.2rem 0.9rem', borderRadius: '6px', border: 'none', background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 'bold' }}>
@@ -269,7 +268,6 @@ export default function Dashboard() {
         <input type="number" value={duration} min="1" onChange={e => setDuration(e.target.value)}
           style={{ width: '100%', padding: '0.75rem', background: '#0a0a1a', color: '#fff', border: 'none', borderRadius: '8px', marginBottom: '1rem', boxSizing: 'border-box' }} />
 
-        {/* Trade feedback */}
         {placing && (
           <p className="placing-indicator" style={{ color: '#6c63ff', marginBottom: '1rem', fontWeight: 'bold', fontSize: '0.9rem' }}>
             Placing trade...
