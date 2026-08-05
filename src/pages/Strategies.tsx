@@ -161,7 +161,7 @@ export default function Strategies() {
 
         {/* Risk Disclaimer*/}
         <div style={{ ...alertStyle('#6c63ff'), marginBottom: '1rem' }}>
-          <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.85rem', margin: '0 0 0.2rem' }}>Risk Disclaimer </p>
+          <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.85rem', margin: '0 0 0.2rem' }}>Risk Disclaimer ⚠️</p>
           <p style={{ color: '#aaa', fontSize: '0.82rem', margin: 0 }}>Trading financial instruments, including forex, stocks, indices, commodities, cryptocurrencies, and derivatives, involves a high level of risk and may not be suitable for all investors. Past performance does not guarantee future results. All trading decisions are made at your own risk, and you should only trade with funds you can afford to lose..</p>
         </div>
       </>
