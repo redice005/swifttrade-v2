@@ -295,7 +295,7 @@ export default function Bots() {
   const labelStyle = {
     color: '#aaa',
     margin: '0 0 0.2rem',
-    fontSize: '0.75rem',
+    fontSize: '0.78rem',
   }
 
   return (
@@ -308,19 +308,19 @@ export default function Bots() {
         .placing-row { animation: pulse-placing 0.9s ease-in-out infinite; }
       `}</style>
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={{ color: '#6c63ff', margin: 0, fontSize: '1.5rem' }}>⚡️ Swift Trade</h1>
+      {/* Header — restored exactly */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
         <button onClick={() => { localStorage.removeItem('deriv_token'); window.location.href = '/login' }}
-          style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.35rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem' }}>
+          style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
           Logout
         </button>
       </div>
 
       <NavBar />
 
-      {/* Balance Card */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '0.75rem' }}>
+      {/* Balance Card — compact */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', width: 'fit-content' }}>
           <button onClick={() => setAccountType('demo')}
             style={{ padding: '0.2rem 0.9rem', borderRadius: '6px', border: 'none', background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 'bold' }}>
@@ -331,18 +331,17 @@ export default function Bots() {
             Real
           </button>
         </div>
-        <p style={{ color: '#aaa', margin: 0, fontSize: '0.75rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
-        <div style={{ marginTop: '0.2rem' }}>
-          {balance !== null
-            ? <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff' }}>{balance.toFixed(2)}</span>
-            : <span style={{ fontSize: '0.78rem', color: '#555' }}>Loading...</span>
-          }
-        </div>
+        <p style={{ color: '#aaa', margin: 0, fontSize: '0.78rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
+        {balance !== null ? (
+          <h2 style={{ margin: '0.2rem 0 0', fontSize: '1.3rem' }}>{balance.toFixed(2)}</h2>
+        ) : (
+          <span style={{ color: '#666', fontSize: '13px' }}>Loading...</span>
+        )}
       </div>
 
-      {/* Market Card */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '0.75rem' }}>
-        <p style={labelStyle}>Market</p>
+      {/* Market — compact */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1rem' }}>
+        <p style={{ color: '#aaa', margin: '0 0 0.35rem', fontSize: '0.78rem' }}>Market</p>
         <select value={market} onChange={e => setMarket(e.target.value)}
           style={{ ...inputStyle, marginBottom: 0 }}>
           <optgroup label="Volatility Indices">
@@ -351,19 +350,25 @@ export default function Bots() {
             <option value="R_50">Volatility 50</option>
             <option value="R_75">Volatility 75</option>
             <option value="R_100">Volatility 100</option>
+            <option value="R_150">Volatility 150</option>
+            <option value="R_200">Volatility 200</option>
           </optgroup>
           <optgroup label="Volatility Indices (1s)">
             <option value="1HZ10V">Volatility 10 (1s)</option>
+            <option value="1HZ15V">Volatility 15 (1s)</option>
             <option value="1HZ25V">Volatility 25 (1s)</option>
+            <option value="1HZ30V">Volatility 30 (1s)</option>
             <option value="1HZ50V">Volatility 50 (1s)</option>
             <option value="1HZ75V">Volatility 75 (1s)</option>
             <option value="1HZ100V">Volatility 100 (1s)</option>
+            <option value="1HZ150V">Volatility 150 (1s)</option>
+            <option value="1HZ200V">Volatility 200 (1s)</option>
           </optgroup>
         </select>
       </div>
 
-      {/* Bot Selector */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+      {/* Bot Selector — compact */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <button onClick={() => setActiveBot('ou')}
           style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: activeBot === 'ou' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}>
           Wealth Generator OU
@@ -374,11 +379,11 @@ export default function Bots() {
         </button>
       </div>
 
-      {/* Bot Settings */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem' }}>
+      {/* Bot Settings — compact */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.25rem 1rem' }}>
         {activeBot === 'ou' ? (
           <>
-            <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.9rem', margin: '0 0 0.85rem' }}>Wealth Generator OU</p>
+            <h3 style={{ color: '#6c63ff', margin: '0 0 0.85rem', fontSize: '1rem' }}>Wealth Generator OU</h3>
             <p style={labelStyle}>Direction</p>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <button onClick={() => setOuDirection('over')}
@@ -398,16 +403,16 @@ export default function Bots() {
             <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-            <p style={labelStyle}>Stake (USD)</p>
+            <p style={labelStyle}>Stake</p>
             <input type="number" value={ouStake} onChange={e => setOuStake(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Stop Loss (USD)</p>
+            <p style={labelStyle}>Stop Loss</p>
             <input type="number" value={ouStopLoss} onChange={e => setOuStopLoss(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Take Profit (USD)</p>
-            <input type="number" value={ouTakeProfit} onChange={e => setOuTakeProfit(e.target.value)} style={inputStyle} />
+            <p style={labelStyle}>Take Profit</p>
+            <input type="number" value={ouTakeProfit} onChange={e => setOuTakeProfit(e.target.value)} style={{ ...inputStyle, marginBottom: '1rem' }} />
           </>
         ) : (
           <>
-            <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.9rem', margin: '0 0 0.85rem' }}>Wealth Generator EO</p>
+            <h3 style={{ color: '#6c63ff', margin: '0 0 0.85rem', fontSize: '1rem' }}>Wealth Generator EO</h3>
             <p style={labelStyle}>Prediction</p>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <button onClick={() => setEoPrediction('even')}
@@ -419,28 +424,24 @@ export default function Bots() {
                 Odd
               </button>
             </div>
-            <p style={labelStyle}>Stake (USD)</p>
+            <p style={labelStyle}>Stake</p>
             <input type="number" value={eoStake} onChange={e => setEoStake(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Stop Loss (USD)</p>
+            <p style={labelStyle}>Stop Loss</p>
             <input type="number" value={eoStopLoss} onChange={e => setEoStopLoss(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Take Profit (USD)</p>
-            <input type="number" value={eoTakeProfit} onChange={e => setEoTakeProfit(e.target.value)} style={inputStyle} />
+            <p style={labelStyle}>Take Profit</p>
+            <input type="number" value={eoTakeProfit} onChange={e => setEoTakeProfit(e.target.value)} style={{ ...inputStyle, marginBottom: '1rem' }} />
           </>
         )}
 
-        {/* Status message */}
         {botMessage && (
           <p style={{
             color: botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff',
-            marginBottom: '0.75rem',
-            fontWeight: 'bold',
-            fontSize: '0.85rem',
+            marginBottom: '0.75rem', fontWeight: 'bold', fontSize: '0.85rem'
           }}>
             {botMessage}
           </p>
         )}
 
-        {/* Action buttons */}
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {!botRunning ? (
             <button onClick={startBot}
@@ -454,12 +455,12 @@ export default function Bots() {
             </button>
           )}
           <button onClick={resetBot}
-            style={{ flex: 1, padding: '0.85rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
+            style={{ flex: 1, padding: '0.85rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem' }}>
             Reset
           </button>
           {(botRunning || tradeLogs.length > 0) && (
             <button onClick={() => setShowLog(true)}
-              style={{ flex: 1, padding: '0.85rem', background: '#1a1a2e', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.78rem' }}>
+              style={{ flex: 1, padding: '0.85rem', background: '#1a1a2e', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>
               View Log
             </button>
           )}
@@ -469,36 +470,37 @@ export default function Bots() {
       {/* Floating Trade Log */}
       {showLog && (
         <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.75)',
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)', zIndex: 100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
         }}>
           <div style={{
-            background: '#1a1a2e',
-            borderRadius: '12px',
-            padding: '1.25rem',
-            width: '100%',
-            maxWidth: '420px',
-            maxHeight: '82vh',
-            display: 'flex',
-            flexDirection: 'column',
+            background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem',
+            width: '100%', maxWidth: '420px', maxHeight: '80vh',
+            display: 'flex', flexDirection: 'column'
           }}>
-            {/* Log header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>TRADE LOG</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 'bold' }}>TRADE LOG</span>
+                {botRunning && (
+                  <span style={{ marginLeft: '0.5rem', color: '#22c55e', fontSize: '0.72rem' }}>● Live</span>
+                )}
+              </div>
               <button onClick={() => setShowLog(false)}
-                style={{ background: 'transparent', color: '#555', border: 'none', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>
-                ✕
+                style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>
+                X
               </button>
             </div>
 
-            {/* Controls inside log */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem' }}>
+            {/* P&L summary at top for quick reference */}
+            <div style={{ padding: '0.6rem 0.75rem', background: '#0a0a1a', borderRadius: '8px', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#aaa', fontSize: '0.82rem' }}>Session P&L</span>
+              <span style={{ color: totalPnL >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>
+                {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               {!botRunning ? (
                 <button onClick={startBot}
                   style={{ flex: 2, padding: '0.65rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.88rem' }}>
@@ -511,44 +513,48 @@ export default function Bots() {
                 </button>
               )}
               <button onClick={resetBot}
-                style={{ flex: 1, padding: '0.65rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                style={{ flex: 1, padding: '0.65rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.88rem' }}>
                 Reset
               </button>
             </div>
 
-            {/* Log entries */}
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {isPlacing && (
                 <div className="placing-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                  <span style={{ color: '#6c63ff', fontSize: '0.83rem' }}>Placing trade...</span>
-                  <span style={{ color: '#6c63ff', fontSize: '0.83rem' }}>···</span>
+                  <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>Placing trade...</span>
+                  <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>···</span>
                 </div>
               )}
 
               {tradeLogs.length === 0 && !isPlacing ? (
-                <p style={{ color: '#444', textAlign: 'center', marginTop: '2rem', fontSize: '0.85rem' }}>
+                <p style={{ color: '#555', textAlign: 'center', marginTop: '2rem', fontSize: '0.85rem' }}>
                   Spotting an entry...
                 </p>
               ) : (
                 tradeLogs.map(log => (
-                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                    <span style={{ color: '#ccc', fontSize: '0.83rem' }}>Digit {log.digit}</span>
-                    <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.83rem' }}>
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid #0a0a1a' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{
+                        width: '26px', height: '26px', borderRadius: '50%',
+                        background: log.result === 'won' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                        border: `1px solid ${log.result === 'won' ? '#22c55e' : '#ef4444'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.75rem', fontWeight: 'bold',
+                        color: log.result === 'won' ? '#22c55e' : '#ef4444',
+                        flexShrink: 0,
+                      }}>
+                        {log.digit}
+                      </div>
+                      <span style={{ color: '#ccc', fontSize: '0.82rem' }}>
+                        {log.result === 'won' ? 'Won' : 'Lost'}
+                      </span>
+                    </div>
+                    <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
                       {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
                     </span>
                   </div>
                 ))
               )}
-            </div>
-
-            {/* P&L */}
-            <div style={{ marginTop: '0.85rem', padding: '0.65rem 0.85rem', background: '#0a0a1a', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#aaa', fontSize: '0.82rem' }}>Total P&L</span>
-                <span style={{ color: totalPnL >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>
-                  {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
-                </span>
-              </div>
             </div>
           </div>
         </div>
