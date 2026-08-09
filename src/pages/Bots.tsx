@@ -282,16 +282,21 @@ export default function Bots() {
 
   const inputStyle = {
     width: '100%',
-    padding: '0.75rem',
+    padding: '0.6rem 0.75rem',
     background: '#0a0a1a',
     color: '#fff',
     border: 'none',
     borderRadius: '8px',
-    marginBottom: '1rem',
-    boxSizing: 'border-box' as const
+    marginBottom: '0.75rem',
+    boxSizing: 'border-box' as const,
+    fontSize: '0.9rem',
   }
 
-  const labelStyle = { color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }
+  const labelStyle = {
+    color: '#aaa',
+    margin: '0 0 0.2rem',
+    fontSize: '0.75rem',
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem', position: 'relative' }}>
@@ -303,31 +308,40 @@ export default function Bots() {
         .placing-row { animation: pulse-placing 0.9s ease-in-out infinite; }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ color: '#6c63ff', margin: 0 }}>⚡ Swift Trade</h1>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h1 style={{ color: '#6c63ff', margin: 0, fontSize: '1.2rem' }}>⚡️ Swift Trade</h1>
         <button onClick={() => { localStorage.removeItem('deriv_token'); window.location.href = '/login' }}
-          style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}>
-          Logout</button>
+          style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.35rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem' }}>
+          Logout
+        </button>
       </div>
 
       <NavBar />
 
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      {/* Balance Card */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.5rem', width: 'fit-content' }}>
           <button onClick={() => setAccountType('demo')}
-            style={{ flex: 1, padding: '0.35rem', borderRadius: '8px', border: 'none', background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
-            Demo</button>
+            style={{ padding: '0.2rem 0.9rem', borderRadius: '6px', border: 'none', background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 'bold' }}>
+            Demo
+          </button>
           <button onClick={() => setAccountType('real')}
-            style={{ flex: 1, padding: '0.35rem', borderRadius: '8px', border: 'none', background: accountType === 'real' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
-            Real</button>
+            style={{ padding: '0.2rem 0.9rem', borderRadius: '6px', border: 'none', background: accountType === 'real' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 'bold' }}>
+            Real
+          </button>
         </div>
-        <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
-        <h2 style={{ margin: '0.5rem 0 0', fontSize: '1.3rem' }}>
-          {balance !== null ? `${balance.toFixed(2)}` : status === 'open' ? 'Loading...' : 'Connecting...'}
-        </h2>
+        <p style={{ color: '#aaa', margin: 0, fontSize: '0.75rem' }}>{accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}</p>
+        <div style={{ marginTop: '0.2rem' }}>
+          {balance !== null
+            ? <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#fff' }}>{balance.toFixed(2)}</span>
+            : <span style={{ fontSize: '0.78rem', color: '#555' }}>Loading...</span>
+          }
+        </div>
       </div>
 
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
+      {/* Market Card */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '0.75rem' }}>
         <p style={labelStyle}>Market</p>
         <select value={market} onChange={e => setMarket(e.target.value)}
           style={{ ...inputStyle, marginBottom: 0 }}>
@@ -348,27 +362,33 @@ export default function Bots() {
         </select>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      {/* Bot Selector */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
         <button onClick={() => setActiveBot('ou')}
-          style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: 'none', background: activeBot === 'ou' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
-          Wealth Generator OU</button>
+          style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: activeBot === 'ou' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}>
+          Wealth Generator OU
+        </button>
         <button onClick={() => setActiveBot('eo')}
-          style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: 'none', background: activeBot === 'eo' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
-          Wealth Generator EO</button>
+          style={{ flex: 1, padding: '0.6rem', borderRadius: '8px', border: 'none', background: activeBot === 'eo' ? '#6c63ff' : '#1a1a2e', color: '#fff', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem' }}>
+          Wealth Generator EO
+        </button>
       </div>
 
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
+      {/* Bot Settings */}
+      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem' }}>
         {activeBot === 'ou' ? (
           <>
-            <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>Wealth Generator OU</h3>
+            <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.9rem', margin: '0 0 0.85rem' }}>Wealth Generator OU</p>
             <p style={labelStyle}>Direction</p>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <button onClick={() => setOuDirection('over')}
-                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'over' ? '#22c55e' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                Over</button>
+                style={{ flex: 1, padding: '0.45rem', borderRadius: '8px', border: 'none', background: ouDirection === 'over' ? '#22c55e' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
+                Over
+              </button>
               <button onClick={() => setOuDirection('under')}
-                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: ouDirection === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                Under</button>
+                style={{ flex: 1, padding: '0.45rem', borderRadius: '8px', border: 'none', background: ouDirection === 'under' ? '#ef4444' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
+                Under
+              </button>
             </div>
             <p style={labelStyle}>Prediction before loss</p>
             <select value={ouDigit1} onChange={e => setOuDigit1(e.target.value)} style={inputStyle}>
@@ -378,131 +398,142 @@ export default function Bots() {
             <select value={ouDigit2} onChange={e => setOuDigit2(e.target.value)} style={inputStyle}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-            <p style={labelStyle}>Entry Digit</p>
-            <select defaultValue="7" style={inputStyle}>
-              {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-            <p style={labelStyle}>Stake</p>
+            <p style={labelStyle}>Stake (USD)</p>
             <input type="number" value={ouStake} onChange={e => setOuStake(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Stop Loss</p>
+            <p style={labelStyle}>Stop Loss (USD)</p>
             <input type="number" value={ouStopLoss} onChange={e => setOuStopLoss(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Take Profit</p>
+            <p style={labelStyle}>Take Profit (USD)</p>
             <input type="number" value={ouTakeProfit} onChange={e => setOuTakeProfit(e.target.value)} style={inputStyle} />
           </>
         ) : (
           <>
-            <h3 style={{ color: '#6c63ff', margin: '0 0 1rem' }}>Wealth Generator EO</h3>
+            <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.9rem', margin: '0 0 0.85rem' }}>Wealth Generator EO</p>
             <p style={labelStyle}>Prediction</p>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <button onClick={() => setEoPrediction('even')}
-                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'even' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                Even</button>
+                style={{ flex: 1, padding: '0.45rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'even' ? '#6c63ff' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
+                Even
+              </button>
               <button onClick={() => setEoPrediction('odd')}
-                style={{ flex: 1, padding: '0.5rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer' }}>
-                Odd</button>
+                style={{ flex: 1, padding: '0.45rem', borderRadius: '8px', border: 'none', background: eoPrediction === 'odd' ? '#f59e0b' : '#0a0a1a', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}>
+                Odd
+              </button>
             </div>
-            <p style={labelStyle}>Entry Digit</p>
-            <select defaultValue="7" style={inputStyle}>
-              {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
-            </select>
-            <p style={labelStyle}>Stake</p>
+            <p style={labelStyle}>Stake (USD)</p>
             <input type="number" value={eoStake} onChange={e => setEoStake(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Stop Loss</p>
+            <p style={labelStyle}>Stop Loss (USD)</p>
             <input type="number" value={eoStopLoss} onChange={e => setEoStopLoss(e.target.value)} style={inputStyle} />
-            <p style={labelStyle}>Take Profit</p>
+            <p style={labelStyle}>Take Profit (USD)</p>
             <input type="number" value={eoTakeProfit} onChange={e => setEoTakeProfit(e.target.value)} style={inputStyle} />
           </>
         )}
 
+        {/* Status message */}
         {botMessage && (
-          <p style={{ color: botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff', marginBottom: '1rem', fontWeight: 'bold' }}>
+          <p style={{
+            color: botMessage.includes('Stop') ? '#ef4444' : botMessage.includes('Take') ? '#22c55e' : '#6c63ff',
+            marginBottom: '0.75rem',
+            fontWeight: 'bold',
+            fontSize: '0.85rem',
+          }}>
             {botMessage}
           </p>
         )}
 
+        {/* Action buttons */}
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {!botRunning ? (
             <button onClick={startBot}
-              style={{ flex: 2, padding: '1rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-              Start Bot</button>
+              style={{ flex: 2, padding: '0.85rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 'bold' }}>
+              Start Bot
+            </button>
           ) : (
             <button onClick={() => stopBot()}
-              style={{ flex: 2, padding: '1rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-              Stop Bot</button>
+              style={{ flex: 2, padding: '0.85rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 'bold' }}>
+              Stop Bot
+            </button>
           )}
           <button onClick={resetBot}
-            style={{ flex: 1, padding: '1rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem' }}>
-            Reset</button>
+            style={{ flex: 1, padding: '0.85rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
+            Reset
+          </button>
           {(botRunning || tradeLogs.length > 0) && (
             <button onClick={() => setShowLog(true)}
-              style={{ flex: 1, padding: '1rem', background: '#1a1a2e', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
-              View Log</button>
+              style={{ flex: 1, padding: '0.85rem', background: '#1a1a2e', color: '#6c63ff', border: '1px solid #6c63ff', borderRadius: '8px', cursor: 'pointer', fontSize: '0.78rem' }}>
+              View Log
+            </button>
           )}
         </div>
       </div>
 
+      {/* Floating Trade Log */}
       {showLog && (
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.7)',
+          background: 'rgba(0,0,0,0.75)',
           zIndex: 100,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '1rem'
+          padding: '1rem',
         }}>
           <div style={{
             background: '#1a1a2e',
             borderRadius: '12px',
-            padding: '1.5rem',
+            padding: '1.25rem',
             width: '100%',
             maxWidth: '420px',
-            maxHeight: '80vh',
+            maxHeight: '82vh',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <span style={{ color: '#aaa', fontSize: '0.9rem', fontWeight: 'bold' }}>TRADE LOG</span>
+            {/* Log header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+              <span style={{ color: '#aaa', fontSize: '0.82rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>TRADE LOG</span>
               <button onClick={() => setShowLog(false)}
-                style={{ background: 'transparent', color: '#aaa', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>
-                X</button>
+                style={{ background: 'transparent', color: '#555', border: 'none', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>
+                ✕
+              </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+            {/* Controls inside log */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem' }}>
               {!botRunning ? (
                 <button onClick={startBot}
-                  style={{ flex: 2, padding: '0.75rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  Start Bot</button>
+                  style={{ flex: 2, padding: '0.65rem', background: '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.88rem' }}>
+                  Start Bot
+                </button>
               ) : (
                 <button onClick={() => stopBot()}
-                  style={{ flex: 2, padding: '0.75rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  Stop Bot</button>
+                  style={{ flex: 2, padding: '0.65rem', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.88rem' }}>
+                  Stop Bot
+                </button>
               )}
               <button onClick={resetBot}
-                style={{ flex: 1, padding: '0.75rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                Reset</button>
+                style={{ flex: 1, padding: '0.65rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                Reset
+              </button>
             </div>
 
+            {/* Log entries */}
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {isPlacing && (
                 <div className="placing-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                  <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>Placing trade...</span>
-                  <span style={{ color: '#6c63ff', fontSize: '0.85rem' }}>···</span>
+                  <span style={{ color: '#6c63ff', fontSize: '0.83rem' }}>Placing trade...</span>
+                  <span style={{ color: '#6c63ff', fontSize: '0.83rem' }}>···</span>
                 </div>
               )}
 
               {tradeLogs.length === 0 && !isPlacing ? (
-                <p style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>
+                <p style={{ color: '#444', textAlign: 'center', marginTop: '2rem', fontSize: '0.85rem' }}>
                   Spotting an entry...
                 </p>
               ) : (
                 tradeLogs.map(log => (
-                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #0a0a1a' }}>
-                    <span style={{ color: '#fff', fontSize: '0.85rem' }}>
-                      Digit {log.digit}
-                    </span>
-                    <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px solid #0a0a1a' }}>
+                    <span style={{ color: '#ccc', fontSize: '0.83rem' }}>Digit {log.digit}</span>
+                    <span style={{ color: log.result === 'won' ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '0.83rem' }}>
                       {log.result === 'won' ? `+${log.profit.toFixed(2)}` : `${log.profit.toFixed(2)}`}
                     </span>
                   </div>
@@ -510,10 +541,11 @@ export default function Bots() {
               )}
             </div>
 
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#0a0a1a', borderRadius: '8px' }}>
+            {/* P&L */}
+            <div style={{ marginTop: '0.85rem', padding: '0.65rem 0.85rem', background: '#0a0a1a', borderRadius: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Total P&L</span>
-                <span style={{ color: totalPnL >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                <span style={{ color: '#aaa', fontSize: '0.82rem' }}>Total P&L</span>
+                <span style={{ color: totalPnL >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold', fontSize: '1rem' }}>
                   {totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}
                 </span>
               </div>
