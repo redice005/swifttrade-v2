@@ -310,7 +310,7 @@ export default function Bots() {
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={{ color: '#6c63ff', margin: 0, fontSize: '1.2rem' }}>⚡️ Swift Trade</h1>
+        <h1 style={{ color: '#6c63ff', margin: 0, fontSize: '1.5rem' }}>⚡️ Swift Trade</h1>
         <button onClick={() => { localStorage.removeItem('deriv_token'); window.location.href = '/login' }}
           style={{ background: 'transparent', color: '#fff', border: '1px solid #333', padding: '0.35rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem' }}>
           Logout
