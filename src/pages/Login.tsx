@@ -486,7 +486,7 @@ export default function Login() {
             <button
               onClick={() =>
                 window.open(
-                  'https://chat.whatsapp.com/Bab0nFH5uTcFXh4RPcqSVP?s=cl&p=a&ilr=4',
+                'https://wa.me/254781560029',
                   '_blank'
                 )
               }
@@ -520,7 +520,7 @@ export default function Login() {
             <button
               onClick={() =>
                 window.open(
-                  'https://t.me/+c54B-L8UYk42ODI0',
+                  'https://t.me/swifttrad3',
                   '_blank'
                 )
               }
