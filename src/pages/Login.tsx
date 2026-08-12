@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+
+import { useState, useEffect } from 'react'
 import { loginWithDeriv } from '@/lib/auth'
 
 const TICKER_BASE = [
@@ -28,8 +29,6 @@ export default function Login() {
   const [tickers, setTickers] = useState(
     TICKER_BASE.map(t => ({ ...t, up: Math.random() > 0.5 }))
   )
-
-  const tickerRef = useRef<HTMLDivElement>(null)
 
   /* ================================
      INITIAL PLATFORM LOADER
@@ -96,30 +95,6 @@ export default function Login() {
     }, 1500)
 
     return () => clearInterval(interval)
-  }, [])
-
-  /* ================================
-     TICKER AUTO SCROLL
-     ================================ */
-  useEffect(() => {
-    const el = tickerRef.current
-    if (!el) return
-
-    let pos = 0
-
-    const scroll = () => {
-      pos += 0.5
-
-      if (pos >= el.scrollWidth / 2) {
-        pos = 0
-      }
-
-      el.scrollLeft = pos
-    }
-
-    const id = setInterval(scroll, 16)
-
-    return () => clearInterval(id)
   }, [])
 
   const tickerItems = [...tickers, ...tickers]
@@ -486,9 +461,8 @@ export default function Login() {
         </svg>
       </div>
 
-      {/* Market ticker */}
+      {/* Market ticker — VISIBLE RIGHT → LEFT SCROLL */}
       <div
-        ref={tickerRef}
         style={{
           position: 'fixed',
           top: 0,
@@ -501,52 +475,63 @@ export default function Login() {
           borderBottom: '1px solid rgba(108, 99, 255, 0.16)',
           display: 'flex',
           alignItems: 'center',
-          gap: '2rem',
-          overflowX: 'hidden',
+          overflow: 'hidden',
           zIndex: 10,
           scrollbarWidth: 'none',
         }}
       >
-        {tickerItems.map((t, i) => (
-          <span
-            key={i}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              color: '#9ca3af',
-              fontSize: '0.7rem',
-              whiteSpace: 'nowrap',
-              fontFamily:
-                '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
-              flexShrink: 0,
-              paddingLeft: i === 0 ? '1rem' : 0,
-              letterSpacing: '0.01em',
-            }}
-          >
-            <span style={{ color: '#d1d5db', fontWeight: 600 }}>
-              {t.symbol}
-            </span>
-
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2rem',
+            width: 'max-content',
+            flexShrink: 0,
+            animation: 'swiftTickerScroll 18s linear infinite',
+            willChange: 'transform',
+          }}
+        >
+          {tickerItems.map((t, i) => (
             <span
+              key={i}
               style={{
-                color: t.up ? '#22c55e' : '#ef4444',
-                fontSize: '0.62rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                color: '#9ca3af',
+                fontSize: '0.7rem',
+                whiteSpace: 'nowrap',
+                fontFamily:
+                  '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+                flexShrink: 0,
+                paddingLeft: i === 0 ? '1rem' : 0,
+                letterSpacing: '0.01em',
               }}
             >
-              {t.up ? '▲' : '▼'}
-            </span>
+              <span style={{ color: '#d1d5db', fontWeight: 600 }}>
+                {t.symbol}
+              </span>
 
-            <span
-              style={{
-                color: t.up ? '#4ade80' : '#f87171',
-                transition: 'color 0.3s ease',
-              }}
-            >
-              {t.price.toFixed(2)}
+              <span
+                style={{
+                  color: t.up ? '#22c55e' : '#ef4444',
+                  fontSize: '0.62rem',
+                }}
+              >
+                {t.up ? '▲' : '▼'}
+              </span>
+
+              <span
+                style={{
+                  color: t.up ? '#4ade80' : '#f87171',
+                  transition: 'color 0.3s ease',
+                }}
+              >
+                {t.price.toFixed(2)}
+              </span>
             </span>
-          </span>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Main login card */}
@@ -951,7 +936,7 @@ export default function Login() {
         </svg>
       </div>
 
-      {/* Login entrance animation */}
+      {/* Animations */}
       <style>
         {`
           @keyframes loginAppear {
@@ -963,6 +948,17 @@ export default function Login() {
             to {
               opacity: 1;
               transform: translateY(0) scale(1);
+            }
+          }
+
+          /* REAL VISIBLE RIGHT → LEFT TICKER */
+          @keyframes swiftTickerScroll {
+            from {
+              transform: translateX(0);
+            }
+
+            to {
+              transform: translateX(-50%);
             }
           }
         `}
