@@ -10,13 +10,74 @@ const TICKER_BASE = [
   { symbol: 'V100(1s)', price: 346.81 },
 ]
 
+const LOADING_MESSAGES = [
+  'Initializing secure environment...',
+  'Connecting to market engine...',
+  'Synchronizing market data...',
+  'Loading trading environment...',
+  'Preparing execution systems...',
+  'Securing authentication layer...',
+  'Finalizing platform...',
+]
+
 export default function Login() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [progress, setProgress] = useState(0)
+  const [statusIndex, setStatusIndex] = useState(0)
+
   const [tickers, setTickers] = useState(
     TICKER_BASE.map(t => ({ ...t, up: Math.random() > 0.5 }))
   )
 
   const tickerRef = useRef<HTMLDivElement>(null)
 
+  /*
+   * PREMIUM INITIAL LOADING
+   */
+  useEffect(() => {
+    if (!isLoading) return
+
+    let current = 0
+
+    const interval = setInterval(() => {
+      current += Math.random() * 3 + 1
+
+      if (current >= 100) {
+        current = 100
+        setProgress(100)
+
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 450)
+
+        clearInterval(interval)
+        return
+      }
+
+      setProgress(Math.floor(current))
+    }, 35)
+
+    return () => clearInterval(interval)
+  }, [isLoading])
+
+  /*
+   * CHANGE LOADING STATUS
+   */
+  useEffect(() => {
+    if (!isLoading) return
+
+    const interval = setInterval(() => {
+      setStatusIndex(prev =>
+        prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
+      )
+    }, 420)
+
+    return () => clearInterval(interval)
+  }, [isLoading])
+
+  /*
+   * LIVE TICKERS
+   */
   useEffect(() => {
     const interval = setInterval(() => {
       setTickers(prev =>
@@ -36,6 +97,9 @@ export default function Login() {
     return () => clearInterval(interval)
   }, [])
 
+  /*
+   * TICKER AUTO SCROLL
+   */
   useEffect(() => {
     const el = tickerRef.current
     if (!el) return
@@ -58,6 +122,281 @@ export default function Login() {
   }, [])
 
   const tickerItems = [...tickers, ...tickers]
+
+  /*
+   * ============================================
+   * PREMIUM LOADING SCREEN
+   * ============================================
+   */
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          background: '#080812',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          fontFamily:
+            'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        }}
+      >
+        {/* Ambient glow */}
+        <div
+          style={{
+            position: 'absolute',
+            width: '420px',
+            height: '420px',
+            borderRadius: '50%',
+            background: 'rgba(108, 99, 255, 0.08)',
+            filter: 'blur(100px)',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Grid */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.22,
+            backgroundImage: `
+              linear-gradient(rgba(108,99,255,0.055) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(108,99,255,0.055) 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px',
+            maskImage:
+              'radial-gradient(circle at center, black 0%, transparent 75%)',
+            WebkitMaskImage:
+              'radial-gradient(circle at center, black 0%, transparent 75%)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Main loader */}
+        <div
+          style={{
+            width: 'min(420px, 88%)',
+            position: 'relative',
+            zIndex: 2,
+            textAlign: 'center',
+          }}
+        >
+          {/* Logo */}
+          <div
+            style={{
+              width: '78px',
+              height: '78px',
+              margin: '0 auto 1.5rem',
+              borderRadius: '22px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background:
+                'linear-gradient(145deg, rgba(108,99,255,0.18), rgba(139,92,246,0.05))',
+              border: '1px solid rgba(139,124,255,0.28)',
+              boxShadow:
+                '0 0 45px rgba(108,99,255,0.15), inset 0 0 25px rgba(108,99,255,0.05)',
+              animation: 'swiftPulse 2s ease-in-out infinite',
+            }}
+          >
+            <svg width="34" height="42" viewBox="0 0 36 44" fill="none">
+              <path
+                d="M21 0L4 24h13L11 44l21-28H19L21 0z"
+                fill="#8b7cff"
+              />
+            </svg>
+          </div>
+
+          {/* Brand */}
+          <div
+            style={{
+              fontSize: '1.65rem',
+              fontWeight: 800,
+              letterSpacing: '-0.045em',
+              marginBottom: '0.25rem',
+            }}
+          >
+            Swift <span style={{ color: '#8b7cff' }}>Trade</span>
+          </div>
+
+          <div
+            style={{
+              color: '#555568',
+              fontSize: '0.64rem',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              marginBottom: '3rem',
+            }}
+          >
+            Elite Execution Platform
+          </div>
+
+          {/* Loading label */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '0.55rem',
+            }}
+          >
+            <span
+              style={{
+                color: '#8f8f9f',
+                fontSize: '0.68rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {progress >= 100
+                ? 'System Ready'
+                : 'Initializing SwiftTrade'}
+            </span>
+
+            <span
+              style={{
+                color: '#8b7cff',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                fontFamily:
+                  '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+              }}
+            >
+              {progress}%
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div
+            style={{
+              width: '100%',
+              height: '3px',
+              background: 'rgba(255,255,255,0.06)',
+              borderRadius: '999px',
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+          >
+            <div
+              style={{
+                width: `${progress}%`,
+                height: '100%',
+                borderRadius: '999px',
+                background:
+                  'linear-gradient(90deg, #6c63ff, #8b5cf6, #a78bfa)',
+                boxShadow:
+                  '0 0 14px rgba(139,124,255,0.65)',
+                transition: 'width 0.08s linear',
+              }}
+            />
+          </div>
+
+          {/* Status */}
+          <div
+            style={{
+              height: '34px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '1rem',
+            }}
+          >
+            <span
+              style={{
+                width: '5px',
+                height: '5px',
+                borderRadius: '50%',
+                background: '#8b7cff',
+                boxShadow: '0 0 8px rgba(139,124,255,0.8)',
+                animation: 'swiftDot 1s ease-in-out infinite',
+              }}
+            />
+
+            <span
+              style={{
+                color: '#626273',
+                fontSize: '0.68rem',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {progress >= 100
+                ? 'Secure connection established'
+                : LOADING_MESSAGES[statusIndex]}
+            </span>
+          </div>
+
+          {/* Bottom technical text */}
+          <div
+            style={{
+              marginTop: '2.5rem',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '1.2rem',
+              color: '#333342',
+              fontSize: '0.58rem',
+              fontFamily:
+                '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+              letterSpacing: '0.08em',
+            }}
+          >
+            <span>SECURE</span>
+            <span>•</span>
+            <span>REAL-TIME</span>
+            <span>•</span>
+            <span>DERIV</span>
+          </div>
+        </div>
+
+        {/* Loader animations */}
+        <style>
+          {`
+            @keyframes swiftPulse {
+              0%, 100% {
+                transform: scale(1);
+                box-shadow:
+                  0 0 45px rgba(108,99,255,0.15),
+                  inset 0 0 25px rgba(108,99,255,0.05);
+              }
+
+              50% {
+                transform: scale(1.035);
+                box-shadow:
+                  0 0 65px rgba(108,99,255,0.24),
+                  inset 0 0 30px rgba(108,99,255,0.08);
+              }
+            }
+
+            @keyframes swiftDot {
+              0%, 100% {
+                opacity: 0.35;
+                transform: scale(0.8);
+              }
+
+              50% {
+                opacity: 1;
+                transform: scale(1.15);
+              }
+            }
+          `}
+        </style>
+      </div>
+    )
+  }
+
+  /*
+   * ============================================
+   * LOGIN PAGE
+   * ============================================
+   */
 
   return (
     <div
@@ -211,7 +550,6 @@ export default function Login() {
             <span
               style={{
                 color: t.up ? '#4ade80' : '#f87171',
-                transition: 'color 0.3s ease',
               }}
             >
               {t.price.toFixed(2)}
@@ -236,6 +574,7 @@ export default function Login() {
           border: '1px solid rgba(108, 99, 255, 0.18)',
           boxShadow:
             '0 25px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(108, 99, 255, 0.035)',
+          animation: 'loginAppear 0.55s ease-out',
         }}
       >
         {/* Logo */}
@@ -486,7 +825,7 @@ export default function Login() {
             <button
               onClick={() =>
                 window.open(
-                'https://wa.me/254781560029',
+                  'https://wa.me/254781560029',
                   '_blank'
                 )
               }
@@ -518,107 +857,4 @@ export default function Login() {
             </button>
 
             <button
-              onClick={() =>
-                window.open(
-                  'https://t.me/swifttrad3',
-                  '_blank'
-                )
-              }
-              style={{
-                flex: 1,
-                padding: '0.72rem',
-                background: 'rgba(108, 99, 255, 0.08)',
-                color: '#8b7cff',
-                border: '1px solid rgba(108, 99, 255, 0.6)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                transition:
-                  'background 0.2s ease, transform 0.2s ease',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background =
-                  'rgba(108, 99, 255, 0.14)'
-                e.currentTarget.style.transform = 'translateY(-1px)'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background =
-                  'rgba(108, 99, 255, 0.08)'
-                e.currentTarget.style.transform = 'translateY(0)'
-              }}
-            >
-              Telegram
-            </button>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <p
-          style={{
-            color: '#3f3f4d',
-            fontSize: '0.67rem',
-            margin: '1.35rem 0 0.7rem',
-          }}
-        >
-          Powered by Deriv · Secure OAuth2 Login
-        </p>
-
-        {/* Risk Disclaimer */}
-        <div
-          style={{
-            borderTop: '1px solid rgba(255, 255, 255, 0.045)',
-            paddingTop: '0.8rem',
-          }}
-        >
-          <p
-            style={{
-              color: '#666675',
-              fontSize: '0.64rem',
-              lineHeight: 1.55,
-              margin: 0,
-            }}
-          >
-            <span
-              style={{
-                color: '#858593',
-                fontWeight: 700,
-              }}
-            >
-              Risk Disclaimer
-            </span>
-            {' — '}
-            Trading financial instruments, including forex, stocks, indices,
-            commodities, cryptocurrencies, and derivatives, involves a high
-            level of risk and may not be suitable for all investors. Past
-            performance does not guarantee future results. All trading
-            decisions are made at your own risk. Only trade with funds you can
-            afford to lose.
-          </p>
-        </div>
-      </div>
-
-      {/* Bottom background chart */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '5%',
-          left: 0,
-          right: 0,
-          zIndex: 0,
-          opacity: 0.1,
-          pointerEvents: 'none',
-        }}
-      >
-        <svg viewBox="0 0 400 80" style={{ width: '100%', height: 'auto' }}>
-          <polyline
-            points="0,40 40,55 80,35 120,50 160,30 200,45 240,25 280,40 320,20 360,35 400,15"
-            fill="none"
-            stroke="#6c63ff"
-            strokeWidth="2"
-          />
-        </svg>
-      </div>
-    </div>
-  )
-}
+              on
