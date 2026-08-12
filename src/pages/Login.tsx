@@ -31,12 +31,10 @@ export default function Login() {
 
   const tickerRef = useRef<HTMLDivElement>(null)
 
-  /*
-   * PREMIUM INITIAL LOADING
-   */
+  /* ================================
+     INITIAL PLATFORM LOADER
+     ================================ */
   useEffect(() => {
-    if (!isLoading) return
-
     let current = 0
 
     const interval = setInterval(() => {
@@ -46,11 +44,12 @@ export default function Login() {
         current = 100
         setProgress(100)
 
+        clearInterval(interval)
+
         setTimeout(() => {
           setIsLoading(false)
         }, 450)
 
-        clearInterval(interval)
         return
       }
 
@@ -58,11 +57,11 @@ export default function Login() {
     }, 35)
 
     return () => clearInterval(interval)
-  }, [isLoading])
+  }, [])
 
-  /*
-   * CHANGE LOADING STATUS
-   */
+  /* ================================
+     LOADING STATUS TEXT
+     ================================ */
   useEffect(() => {
     if (!isLoading) return
 
@@ -75,9 +74,9 @@ export default function Login() {
     return () => clearInterval(interval)
   }, [isLoading])
 
-  /*
-   * LIVE TICKERS
-   */
+  /* ================================
+     LIVE TICKERS
+     ================================ */
   useEffect(() => {
     const interval = setInterval(() => {
       setTickers(prev =>
@@ -97,9 +96,9 @@ export default function Login() {
     return () => clearInterval(interval)
   }, [])
 
-  /*
-   * TICKER AUTO SCROLL
-   */
+  /* ================================
+     TICKER AUTO SCROLL
+     ================================ */
   useEffect(() => {
     const el = tickerRef.current
     if (!el) return
@@ -123,12 +122,9 @@ export default function Login() {
 
   const tickerItems = [...tickers, ...tickers]
 
-  /*
-   * ============================================
-   * PREMIUM LOADING SCREEN
-   * ============================================
-   */
-
+  /* ================================
+     PREMIUM LOADING SCREEN
+     ================================ */
   if (isLoading) {
     return (
       <div
@@ -161,16 +157,14 @@ export default function Login() {
           }}
         />
 
-        {/* Grid */}
+        {/* Background grid */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             opacity: 0.22,
-            backgroundImage: `
-              linear-gradient(rgba(108,99,255,0.055) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(108,99,255,0.055) 1px, transparent 1px)
-            `,
+            backgroundImage:
+              'linear-gradient(rgba(108,99,255,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,0.055) 1px, transparent 1px)',
             backgroundSize: '48px 48px',
             maskImage:
               'radial-gradient(circle at center, black 0%, transparent 75%)',
@@ -180,7 +174,7 @@ export default function Login() {
           }}
         />
 
-        {/* Main loader */}
+        {/* Loader container */}
         <div
           style={{
             width: 'min(420px, 88%)',
@@ -239,7 +233,7 @@ export default function Login() {
             Elite Execution Platform
           </div>
 
-          {/* Loading label */}
+          {/* Progress heading */}
           <div
             style={{
               display: 'flex',
@@ -282,7 +276,6 @@ export default function Login() {
               background: 'rgba(255,255,255,0.06)',
               borderRadius: '999px',
               overflow: 'hidden',
-              position: 'relative',
             }}
           >
             <div
@@ -292,14 +285,13 @@ export default function Login() {
                 borderRadius: '999px',
                 background:
                   'linear-gradient(90deg, #6c63ff, #8b5cf6, #a78bfa)',
-                boxShadow:
-                  '0 0 14px rgba(139,124,255,0.65)',
+                boxShadow: '0 0 14px rgba(139,124,255,0.65)',
                 transition: 'width 0.08s linear',
               }}
             />
           </div>
 
-          {/* Status */}
+          {/* Loading status */}
           <div
             style={{
               height: '34px',
@@ -325,7 +317,6 @@ export default function Login() {
               style={{
                 color: '#626273',
                 fontSize: '0.68rem',
-                letterSpacing: '0.02em',
               }}
             >
               {progress >= 100
@@ -334,7 +325,7 @@ export default function Login() {
             </span>
           </div>
 
-          {/* Bottom technical text */}
+          {/* Technical status */}
           <div
             style={{
               marginTop: '2.5rem',
@@ -392,12 +383,9 @@ export default function Login() {
     )
   }
 
-  /*
-   * ============================================
-   * LOGIN PAGE
-   * ============================================
-   */
-
+  /* ================================
+     LOGIN PAGE
+     ================================ */
   return (
     <div
       style={{
@@ -550,6 +538,7 @@ export default function Login() {
             <span
               style={{
                 color: t.up ? '#4ade80' : '#f87171',
+                transition: 'color 0.3s ease',
               }}
             >
               {t.price.toFixed(2)}
@@ -782,7 +771,8 @@ export default function Login() {
               e.currentTarget.style.borderColor = '#8b7cff'
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(108, 99, 255, 0.035)'
+              e.currentTarget.style.background =
+                'rgba(108, 99, 255, 0.035)'
               e.currentTarget.style.borderColor =
                 'rgba(108, 99, 255, 0.65)'
             }}
@@ -857,4 +847,124 @@ export default function Login() {
             </button>
 
             <button
-              on
+              onClick={() =>
+                window.open(
+                  'https://t.me/swifttrad3',
+                  '_blank'
+                )
+              }
+              style={{
+                flex: 1,
+                padding: '0.72rem',
+                background: 'rgba(108, 99, 255, 0.08)',
+                color: '#8b7cff',
+                border: '1px solid rgba(108, 99, 255, 0.6)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                transition:
+                  'background 0.2s ease, transform 0.2s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background =
+                  'rgba(108, 99, 255, 0.14)'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background =
+                  'rgba(108, 99, 255, 0.08)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              Telegram
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p
+          style={{
+            color: '#3f3f4d',
+            fontSize: '0.67rem',
+            margin: '1.35rem 0 0.7rem',
+          }}
+        >
+          Powered by Deriv · Secure OAuth2 Login
+        </p>
+
+        {/* Risk Disclaimer */}
+        <div
+          style={{
+            borderTop: '1px solid rgba(255, 255, 255, 0.045)',
+            paddingTop: '0.8rem',
+          }}
+        >
+          <p
+            style={{
+              color: '#666675',
+              fontSize: '0.64rem',
+              lineHeight: 1.55,
+              margin: 0,
+            }}
+          >
+            <span
+              style={{
+                color: '#858593',
+                fontWeight: 700,
+              }}
+            >
+              Risk Disclaimer
+            </span>
+            {' — '}
+            Trading financial instruments, including forex, stocks, indices,
+            commodities, cryptocurrencies, and derivatives, involves a high
+            level of risk and may not be suitable for all investors. Past
+            performance does not guarantee future results. All trading
+            decisions are made at your own risk. Only trade with funds you can
+            afford to lose.
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom background chart */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '5%',
+          left: 0,
+          right: 0,
+          zIndex: 0,
+          opacity: 0.1,
+          pointerEvents: 'none',
+        }}
+      >
+        <svg viewBox="0 0 400 80" style={{ width: '100%', height: 'auto' }}>
+          <polyline
+            points="0,40 40,55 80,35 120,50 160,30 200,45 240,25 280,40 320,20 360,35 400,15"
+            fill="none"
+            stroke="#6c63ff"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+
+      {/* Login entrance animation */}
+      <style>
+        {`
+          @keyframes loginAppear {
+            from {
+              opacity: 0;
+              transform: translateY(12px) scale(0.985);
+            }
+
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}
+      </style>
+    </div>
+  )
+}
