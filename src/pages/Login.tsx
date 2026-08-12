@@ -33,28 +33,30 @@ export default function Login() {
 
   /* ================================
      INITIAL PLATFORM LOADER
+     EXACTLY 4 SECONDS
      ================================ */
   useEffect(() => {
-    let current = 0
+    const duration = 4000
+    const startTime = Date.now()
 
     const interval = setInterval(() => {
-      current += Math.random() * 3 + 1
+      const elapsed = Date.now() - startTime
 
-      if (current >= 100) {
-        current = 100
-        setProgress(100)
+      const percentage = Math.min(
+        100,
+        Math.floor((elapsed / duration) * 100)
+      )
 
+      setProgress(percentage)
+
+      if (percentage >= 100) {
         clearInterval(interval)
 
         setTimeout(() => {
           setIsLoading(false)
         }, 450)
-
-        return
       }
-
-      setProgress(Math.floor(current))
-    }, 35)
+    }, 40)
 
     return () => clearInterval(interval)
   }, [])
@@ -69,7 +71,7 @@ export default function Login() {
       setStatusIndex(prev =>
         prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
       )
-    }, 420)
+    }, 570)
 
     return () => clearInterval(interval)
   }, [isLoading])
