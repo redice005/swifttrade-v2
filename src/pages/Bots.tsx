@@ -77,14 +77,16 @@ export default function Bots() {
   const pendingStakeRef = useRef(0)
   const activeContractIdRef = useRef<number | null>(null)
 
-  const [ouDirection, setOuDirection] = useState<'over' | 'under'>('over')
+  const [ouDirection, setOuDirection] =
+    useState<'over' | 'under'>('over')
   const [ouDigit1, setOuDigit1] = useState('1')
   const [ouDigit2, setOuDigit2] = useState('3')
   const [ouStake, setOuStake] = useState('1')
   const [ouStopLoss, setOuStopLoss] = useState('10')
   const [ouTakeProfit, setOuTakeProfit] = useState('10')
 
-  const [eoPrediction, setEoPrediction] = useState<'even' | 'odd'>('even')
+  const [eoPrediction, setEoPrediction] =
+    useState<'even' | 'odd'>('even')
   const [eoStake, setEoStake] = useState('1')
   const [eoStopLoss, setEoStopLoss] = useState('10')
   const [eoTakeProfit, setEoTakeProfit] = useState('10')
@@ -115,7 +117,6 @@ export default function Bots() {
 
     market: 'R_100',
 
-    // Market Switcher state
     marketStart: 'R_100',
     marketSwitchGroup: 'plain' as 'plain' | '1s',
     marketFirstTrade: true,
@@ -134,19 +135,6 @@ export default function Bots() {
   const getDelay = (mkt: string) =>
     mkt.includes('1HZ') ? 150 : 350
 
-  /*
-   * Pick the market for the NEXT contract.
-   *
-   * First contract:
-   *     Uses exactly what the user selected.
-   *
-   * After that:
-   *     Plain -> 1s -> Plain -> 1s
-   *     OR
-   *     1s -> Plain -> 1s -> Plain
-   *
-   * The market itself is random inside the selected group.
-   */
   const getNextMarket = () => {
     const state = botStateRef.current
 
@@ -176,11 +164,9 @@ export default function Bots() {
 
     if (nextGroup === 'plain') {
       nextMarket = getRandomMarket(PLAIN_MARKETS)
-
       state.marketSwitchGroup = '1s'
     } else {
       nextMarket = getRandomMarket(ONE_SECOND_MARKETS)
-
       state.marketSwitchGroup = 'plain'
     }
 
@@ -316,9 +302,6 @@ export default function Bots() {
 
         const state = botStateRef.current
 
-        /*
-         * Stop-loss
-         */
         if (
           totalPnLRef.current <=
           -state.stopLoss
@@ -327,9 +310,6 @@ export default function Bots() {
           return
         }
 
-        /*
-         * Take-profit
-         */
         if (
           totalPnLRef.current >=
           state.takeProfit
@@ -338,9 +318,6 @@ export default function Bots() {
           return
         }
 
-        /*
-         * WIN
-         */
         if (won) {
           if (
             state.inRecovery &&
@@ -360,9 +337,6 @@ export default function Bots() {
           return
         }
 
-        /*
-         * LOSS
-         */
         handleLoss()
       }
     })
@@ -383,12 +357,6 @@ export default function Bots() {
   const handleLoss = () => {
     const state = botStateRef.current
 
-    /*
-     * OU and Market Switcher both use
-     * the OU recovery logic.
-     *
-     * EO keeps its original logic.
-     */
     if (
       state.activeBot === 'ou' ||
       state.activeBot === 'market'
@@ -411,11 +379,6 @@ export default function Bots() {
         )
     }
 
-    /*
-     * IMPORTANT:
-     * Market Switcher gets a NEW market
-     * when placeNextTrade() runs.
-     */
     setTimeout(() => {
       if (botStateRef.current.running) {
         placeNextTrade()
@@ -429,10 +392,6 @@ export default function Bots() {
     if (!state.running) return
     if (pendingTradeRef.current) return
 
-    /*
-     * Market Switcher chooses its market
-     * immediately before creating the proposal.
-     */
     if (state.activeBot === 'market') {
       getNextMarket()
     }
@@ -442,12 +401,6 @@ export default function Bots() {
 
     const tradeMarket = state.market
 
-    /*
-     * Safety timeout.
-     * If Deriv doesn't respond, allow the bot
-     * to continue rather than getting permanently
-     * stuck in "placing".
-     */
     setTimeout(() => {
       if (
         pendingTradeRef.current &&
@@ -515,9 +468,6 @@ export default function Bots() {
     state.inRecovery = false
     state.activeBot = activeBot
 
-    /*
-     * Normal OU
-     */
     if (activeBot === 'ou') {
       state.market = market
 
@@ -539,9 +489,6 @@ export default function Bots() {
         parseFloat(ouTakeProfit)
     }
 
-    /*
-     * EO
-     */
     else if (activeBot === 'eo') {
       state.market = market
 
@@ -561,17 +508,10 @@ export default function Bots() {
         parseFloat(eoTakeProfit)
     }
 
-    /*
-     * MARKET SWITCHER
-     *
-     * The first market is exactly what
-     * the user selected.
-     */
     else {
       state.marketStart = marketStart
 
-      state.market =
-        marketStart
+      state.market = marketStart
 
       state.marketFirstTrade = true
 
@@ -827,11 +767,13 @@ export default function Bots() {
           marginBottom: '1rem',
         }}
       >
-        <p style={{
-          color: '#aaa',
-          margin: '0 0 0.35rem',
-          fontSize: '0.78rem',
-        }}>
+        <p
+          style={{
+            color: '#aaa',
+            margin: '0 0 0.35rem',
+            fontSize: '0.78rem',
+          }}
+        >
           Market
         </p>
 
@@ -869,101 +811,184 @@ export default function Bots() {
         </select>
       </div>
 
-      {/* Bot Selector */}
+      {/* BOT STRATEGIES */}
       <div
         style={{
-          display: 'flex',
-          gap: '0.5rem',
           marginBottom: '1rem',
         }}
       >
+        <h3
+          style={{
+            color: '#fff',
+            margin: '0 0 0.75rem',
+            fontSize: '0.95rem',
+            letterSpacing: '0.04em',
+          }}
+        >
+          BOT STRATEGIES
+        </h3>
+
+        {/* Wealth Generator OU */}
         <button
           onClick={() => setActiveBot('ou')}
           style={{
-            flex: 1,
-            padding: '0.7rem',
-            borderRadius: '8px',
-            border: 'none',
+            width: '100%',
+            padding: '0.85rem 1rem',
+            marginBottom: '0.55rem',
+            borderRadius: '10px',
+            border:
+              activeBot === 'ou'
+                ? '1px solid #6c63ff'
+                : '1px solid #292943',
             background:
               activeBot === 'ou'
-                ? '#6c63ff'
+                ? 'rgba(108,99,255,0.14)'
                 : '#1a1a2e',
             color: '#fff',
             cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '0.82rem',
+            textAlign: 'left',
           }}
         >
-          <div>Wealth Generator OU</div>
           <div
             style={{
-              fontSize: '0.68rem',
-              opacity: 0.7,
-              marginTop: '0.2rem',
-              fontWeight: 'normal',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontWeight: 'bold',
+              fontSize: '0.88rem',
+            }}
+          >
+            ⚡ Wealth Generator OU
+          </div>
+
+          <div
+            style={{
+              color: '#aaa',
+              fontSize: '0.7rem',
+              marginTop: '0.25rem',
             }}
           >
             Digit Over / Under
           </div>
+
+          <div
+            style={{
+              color: '#6c63ff',
+              fontSize: '0.65rem',
+              marginTop: '0.35rem',
+              fontWeight: 'bold',
+            }}
+          >
+            RECOVERY
+          </div>
         </button>
 
+        {/* Wealth Generator EO */}
         <button
           onClick={() => setActiveBot('eo')}
           style={{
-            flex: 1,
-            padding: '0.7rem',
-            borderRadius: '8px',
-            border: 'none',
+            width: '100%',
+            padding: '0.85rem 1rem',
+            marginBottom: '0.55rem',
+            borderRadius: '10px',
+            border:
+              activeBot === 'eo'
+                ? '1px solid #6c63ff'
+                : '1px solid #292943',
             background:
               activeBot === 'eo'
-                ? '#6c63ff'
+                ? 'rgba(108,99,255,0.14)'
                 : '#1a1a2e',
             color: '#fff',
             cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '0.82rem',
+            textAlign: 'left',
           }}
         >
-          <div>Wealth Generator EO</div>
           <div
             style={{
-              fontSize: '0.68rem',
-              opacity: 0.7,
-              marginTop: '0.2rem',
-              fontWeight: 'normal',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontWeight: 'bold',
+              fontSize: '0.88rem',
+            }}
+          >
+            ◉ Wealth Generator EO
+          </div>
+
+          <div
+            style={{
+              color: '#aaa',
+              fontSize: '0.7rem',
+              marginTop: '0.25rem',
             }}
           >
             Even / Odd
           </div>
+
+          <div
+            style={{
+              color: '#6c63ff',
+              fontSize: '0.65rem',
+              marginTop: '0.35rem',
+              fontWeight: 'bold',
+            }}
+          >
+            RECOVERY
+          </div>
         </button>
 
+        {/* Market Switcher */}
         <button
           onClick={() => setActiveBot('market')}
           style={{
-            flex: 1,
-            padding: '0.7rem',
-            borderRadius: '8px',
-            border: 'none',
+            width: '100%',
+            padding: '0.85rem 1rem',
+            borderRadius: '10px',
+            border:
+              activeBot === 'market'
+                ? '1px solid #6c63ff'
+                : '1px solid #292943',
             background:
               activeBot === 'market'
-                ? '#6c63ff'
+                ? 'rgba(108,99,255,0.14)'
                 : '#1a1a2e',
             color: '#fff',
             cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '0.82rem',
+            textAlign: 'left',
           }}
         >
-          <div>Market Switcher</div>
           <div
             style={{
-              fontSize: '0.68rem',
-              opacity: 0.7,
-              marginTop: '0.2rem',
-              fontWeight: 'normal',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontWeight: 'bold',
+              fontSize: '0.88rem',
             }}
           >
-            Automatic Market Rotation
+            🔄 Market Switcher
+          </div>
+
+          <div
+            style={{
+              color: '#aaa',
+              fontSize: '0.7rem',
+              marginTop: '0.25rem',
+            }}
+          >
+            Automatic market rotation
+          </div>
+
+          <div
+            style={{
+              color: '#6c63ff',
+              fontSize: '0.65rem',
+              marginTop: '0.35rem',
+              fontWeight: 'bold',
+            }}
+          >
+            PLAIN ↔ 1S
           </div>
         </button>
       </div>
