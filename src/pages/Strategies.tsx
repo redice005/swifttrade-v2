@@ -71,6 +71,16 @@ export default function Strategies() {
 
       <NavBar />
 
+      {/* ── BOT MODEL INFORMATION ── */}
+      <div style={{ ...alertStyle('#6c63ff'), marginBottom: '1rem' }}>
+        <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.85rem', margin: '0 0 0.3rem' }}>
+          🤖 BOT MODEL
+        </p>
+        <p style={{ color: '#ccc', fontSize: '0.84rem', lineHeight: '1.5', margin: 0 }}>
+          Bots work under a trained model and identify their own entry point, except for Even/Odd.
+        </p>
+      </div>
+
       {/* ── OVER / UNDER STRATEGY (using the Wealth Generator OU bot) ── */}
       <>
         {/* Header */}
@@ -113,8 +123,6 @@ export default function Strategies() {
             { text: 'Look at the digit distribution circles (0–9) and spot the digit with the highest percentage.' },
             { text: <><span style={{ color: '#22c55e', fontWeight: 'bold' }}>If that digit is 5, 6, 7, 8, or 9</span> — trade <span style={{ color: '#22c55e', fontWeight: 'bold' }}>OVER</span> on the Wealth Generator OU bot.</> },
             { text: <><span style={{ color: '#ef4444', fontWeight: 'bold' }}>If that digit is 0, 1, 2, 3, or 4</span> — trade <span style={{ color: '#ef4444', fontWeight: 'bold' }}>UNDER</span> on the Wealth Generator OU bot.</> },
-            { text: 'Use that highest-percentage digit as the Entry Digit (First Digit) in Wealth Generator OU.' },
-            { text: <>Leave the <span style={{ color: '#fff', fontWeight: 'bold' }}>Second Digit</span> in the bot settings as it is — only change the <span style={{ color: '#fff', fontWeight: 'bold' }}>Over/Under</span> selection and the <span style={{ color: '#fff', fontWeight: 'bold' }}>Entry Digit</span>, unless you're experienced, in which case you can also adjust the Second (recovery) digit.</> },
             { text: 'Keep runs short — aim for 3 trades per session as markets can be volatile.' },
             { text: 'If the bot takes a loss and recovers on the next trade — stop the bot immediately and secure the profit.' },
             { text: 'Practise on Demo first before using real money.' },
@@ -159,7 +167,7 @@ export default function Strategies() {
           ))}
         </div>
 
-        {/* Risk Disclaimer*/}
+        {/* Risk Disclaimer */}
         <div style={{ ...alertStyle('#6c63ff'), marginBottom: '1rem' }}>
           <p style={{ color: '#6c63ff', fontWeight: 'bold', fontSize: '0.85rem', margin: '0 0 0.2rem' }}>Risk Disclaimer ⚠️</p>
           <p style={{ color: '#aaa', fontSize: '0.82rem', margin: 0 }}>Trading financial instruments, including forex, stocks, indices, commodities, cryptocurrencies, and derivatives, involves a high level of risk and may not be suitable for all investors. Past performance does not guarantee future results. All trading decisions are made at your own risk, and you should only trade with funds you can afford to lose..</p>
