@@ -709,7 +709,7 @@ export default function Login() {
             e.currentTarget.style.filter = 'brightness(1)'
           }}
         >
-          Login
+          Login with Deriv
         </button>
 
         {/* Create Deriv account */}
