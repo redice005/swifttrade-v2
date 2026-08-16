@@ -683,29 +683,29 @@ export default function Login() {
           onClick={loginWithDeriv}
           style={{
             width: '100%',
-            padding: '0.95rem',
+            padding: '0.72rem',
             background: 'linear-gradient(135deg, #6c63ff, #8b5cf6)',
             color: '#fff',
             border: 'none',
-            borderRadius: '10px',
+            borderRadius: '9px',
             cursor: 'pointer',
-            fontSize: '0.96rem',
+            fontSize: '0.9rem',
             fontWeight: 700,
-            marginBottom: '1rem',
-            boxShadow: '0 6px 22px rgba(108, 99, 255, 0.28)',
+            marginBottom: '0.85rem',
+            boxShadow: '0 5px 18px rgba(108, 99, 255, 0.25)',
             transition:
               'transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease',
           }}
           onMouseEnter={e => {
             e.currentTarget.style.transform = 'translateY(-1px)'
             e.currentTarget.style.boxShadow =
-              '0 8px 26px rgba(108, 99, 255, 0.38)'
+              '0 7px 22px rgba(108, 99, 255, 0.34)'
             e.currentTarget.style.filter = 'brightness(1.06)'
           }}
           onMouseLeave={e => {
             e.currentTarget.style.transform = 'translateY(0)'
             e.currentTarget.style.boxShadow =
-              '0 6px 22px rgba(108, 99, 255, 0.28)'
+              '0 5px 18px rgba(108, 99, 255, 0.25)'
             e.currentTarget.style.filter = 'brightness(1)'
           }}
         >
@@ -741,13 +741,13 @@ export default function Login() {
             }
             style={{
               width: '100%',
-              padding: '0.72rem',
+              padding: '0.58rem',
               background: 'rgba(108, 99, 255, 0.035)',
               color: '#8b7cff',
               border: '1px solid rgba(108, 99, 255, 0.65)',
-              borderRadius: '8px',
+              borderRadius: '7px',
               cursor: 'pointer',
-              fontSize: '0.9rem',
+              fontSize: '0.84rem',
               fontWeight: 700,
               transition:
                 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
@@ -816,13 +816,13 @@ export default function Login() {
               }
               style={{
                 flex: 1,
-                padding: '0.72rem',
+                padding: '0.58rem',
                 background: 'rgba(34, 197, 94, 0.08)',
                 color: '#22c55e',
                 border: '1px solid rgba(34, 197, 94, 0.6)',
-                borderRadius: '8px',
+                borderRadius: '7px',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
+                fontSize: '0.76rem',
                 fontWeight: 700,
                 transition:
                   'background 0.2s ease, transform 0.2s ease',
@@ -850,13 +850,13 @@ export default function Login() {
               }
               style={{
                 flex: 1,
-                padding: '0.72rem',
+                padding: '0.58rem',
                 background: 'rgba(108, 99, 255, 0.08)',
                 color: '#8b7cff',
                 border: '1px solid rgba(108, 99, 255, 0.6)',
-                borderRadius: '8px',
+                borderRadius: '7px',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
+                fontSize: '0.76rem',
                 fontWeight: 700,
                 transition:
                   'background 0.2s ease, transform 0.2s ease',
