@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { loginWithDeriv } from '@/lib/auth'
 
@@ -778,7 +777,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Community */}
+        {/* Contact & Support */}
         <div
           style={{
             border: '1px solid rgba(255, 255, 255, 0.07)',
@@ -790,12 +789,21 @@ export default function Login() {
             style={{
               color: '#9d9daa',
               fontSize: '0.82rem',
-              margin: '0 0 0.75rem',
-              paddingBottom: '0.75rem',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+              margin: '0 0 0.4rem',
+              paddingBottom: '0.5rem',
             }}
           >
-            Join our community
+            Contact & Support
+          </p>
+
+          <p
+            style={{
+              color: '#666675',
+              fontSize: '0.7rem',
+              margin: '0 0 0.75rem',
+            }}
+          >
+            Need assistance? Our support team is here to help.
           </p>
 
           <div style={{ display: 'flex', gap: '0.6rem' }}>
@@ -830,7 +838,7 @@ export default function Login() {
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
-              WhatsApp
+              WhatsApp Support
             </button>
 
             <button
@@ -864,7 +872,7 @@ export default function Login() {
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
-              Telegram
+              Telegram Community
             </button>
           </div>
         </div>
