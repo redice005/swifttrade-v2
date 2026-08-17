@@ -77,7 +77,8 @@ export default function Strategies() {
           🤖 BOT MODEL
         </p>
         <p style={{ color: '#ccc', fontSize: '0.84rem', lineHeight: '1.5', margin: 0 }}>
-          Bots work under a trained model and identify their own entry point, except for Even/Odd.
+          Bots work under a trained model and identify their own entry point, except for Even/Odd
+The Best bot is   marketswitcher✔️.
         </p>
       </div>
 
