@@ -87,9 +87,9 @@ The Best bot is   marketswitcher✔️.
       <>
         {/* Header */}
         <div style={{ ...cardStyle, borderLeft: '3px solid #22c55e' }}>
-          <p style={{ color: '#22c55e', fontSize: '0.72rem', fontWeight: 'bold', margin: '0 0 0.25rem', letterSpacing: '0.06em' }}>WEALTH GENERATOR OU</p>
+          <p style={{ color: '#22c55e', fontSize: '0.72rem', fontWeight: 'bold', margin: '0 0 0.25rem', letterSpacing: '0.06em' }}>MARKET SWITCHER</p>
           <h2 style={{ margin: '0 0 0.4rem', fontSize: '1.1rem' }}>Over / Under Strategy</h2>
-          <p style={{ color: '#aaa', fontSize: '0.83rem', margin: 0 }}>Use the Analysis tab to spot market momentum and trade in the direction of the dominant digit range using the Wealth Generator OU bot.</p>
+          <p style={{ color: '#aaa', fontSize: '0.83rem', margin: 0 }}>Use the Analysis tab to spot market momentum and trade in the direction of the dominant digit range using the MarketSwitcher.</p>
         </div>
 
         {/* Digit ranges */}
@@ -123,8 +123,8 @@ The Best bot is   marketswitcher✔️.
           {[
             { text: 'Open the Analysis tab and select a Volatility Index market.' },
             { text: 'Look at the digit distribution circles (0–9) and spot the digit with the highest percentage.' },
-            { text: <><span style={{ color: '#22c55e', fontWeight: 'bold' }}>If that digit is 5, 6, 7, 8, or 9</span> — trade <span style={{ color: '#22c55e', fontWeight: 'bold' }}>OVER</span> on the Wealth Generator OU bot.</> },
-            { text: <><span style={{ color: '#ef4444', fontWeight: 'bold' }}>If that digit is 0, 1, 2, 3, or 4</span> — trade <span style={{ color: '#ef4444', fontWeight: 'bold' }}>UNDER</span> on the Wealth Generator OU bot.</> },
+            { text: <><span style={{ color: '#22c55e', fontWeight: 'bold' }}>If that digit is 5, 6, 7, 8, or 9</span> — trade <span style={{ color: '#22c55e', fontWeight: 'bold' }}>OVER</span> Market Switcher bot.</> },
+            { text: <><span style={{ color: '#ef4444', fontWeight: 'bold' }}>If that digit is 0, 1, 2, 3, or 4</span> — trade <span style={{ color: '#ef4444', fontWeight: 'bold' }}>UNDER</span> on the Market Switcher bot.</> },
             { text: 'Keep runs short — aim for 3 trades per session as markets can be volatile.' },
             { text: 'If the bot takes a loss and recovers on the next trade — stop the bot immediately and secure the profit.' },
             { text: 'Practise on Demo first before using real money.' },
