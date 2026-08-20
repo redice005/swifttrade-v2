@@ -225,40 +225,43 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
           {balance !== null ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-              {/* Account symbol */}
               {accountType === 'demo' ? (
                 <div
                   style={{
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: '#6c63ff',
+                    background: '#16a34a',
                     color: '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold',
+                    fontSize: '0.95rem',
+                    fontWeight: '800',
                     flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(22,163,74,0.35)',
                   }}
                 >
                   D
                 </div>
               ) : (
-                <span
+                <div
                   style={{
                     width: '32px',
                     height: '32px',
+                    borderRadius: '50%',
+                    background: '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.8rem',
+                    fontSize: '1.55rem',
                     lineHeight: 1,
                     flexShrink: 0,
+                    overflow: 'hidden',
                   }}
                 >
                   🇺🇸
-                </span>
+                </div>
               )}
 
               <h2 style={{ margin: 0, fontSize: '1.3rem' }}>
