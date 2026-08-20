@@ -68,7 +68,6 @@ export default function Dashboard() {
           resetTradeState()
           setMessage(`Error: ${data.error.message}`)
         } else {
-          // Keep placing=true — trade still in flight
           send({ buy: data.proposal.id, price: parseFloat(stake) })
           startTradeTimeout(retryPayloadRef.current)
         }
@@ -81,7 +80,6 @@ export default function Dashboard() {
           resetTradeState()
           setMessage(`Error: ${data.error.message}`)
         } else {
-          // Keep placing=true — waiting for contract to settle
           activeContractIdRef.current = data.buy.contract_id
           send({ proposal_open_contract: 1, subscribe: 1, contract_id: data.buy.contract_id })
         }
@@ -227,24 +225,41 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
           {balance !== null ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-              {/* Circular account currency symbol */}
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: accountType === 'demo' ? '#6c63ff' : '#22c55e',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.9rem',
-                  fontWeight: 'bold',
-                  flexShrink: 0,
-                }}
-              >
-                {accountType === 'demo' ? 'D' : '$'}
-              </div>
+              {/* Account symbol */}
+              {accountType === 'demo' ? (
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: '#6c63ff',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    flexShrink: 0,
+                  }}
+                >
+                  D
+                </div>
+              ) : (
+                <span
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.8rem',
+                    lineHeight: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  🇺🇸
+                </span>
+              )}
 
               <h2 style={{ margin: 0, fontSize: '1.3rem' }}>
                 {balance.toFixed(2)}
