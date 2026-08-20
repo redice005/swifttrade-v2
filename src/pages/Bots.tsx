@@ -738,14 +738,54 @@ export default function Bots() {
         </p>
 
         {balance !== null ? (
-          <h2
+          <div
             style={{
-              margin: '0.2rem 0 0',
-              fontSize: '1.3rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              marginTop: '0.2rem',
             }}
           >
-            {balance.toFixed(2)}
-          </h2>
+            {/* Account Currency Badge */}
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                minWidth: '32px',
+                borderRadius: '50%',
+                background:
+                  accountType === 'demo'
+                    ? '#6c63ff'
+                    : '#22c55e',
+                border:
+                  accountType === 'demo'
+                    ? '1px solid rgba(108,99,255,0.8)'
+                    : '1px solid rgba(34,197,94,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize:
+                  accountType === 'demo'
+                    ? '0.95rem'
+                    : '1.05rem',
+                fontWeight: 'bold',
+                lineHeight: 1,
+                boxSizing: 'border-box',
+                overflow: 'hidden',
+              }}
+            >
+              {accountType === 'demo' ? 'D' : '🇺🇸'}
+            </div>
+
+            <h2
+              style={{
+                margin: 0,
+                fontSize: '1.3rem',
+              }}
+            >
+              {balance.toFixed(2)}
+            </h2>
+          </div>
         ) : (
           <span
             style={{
