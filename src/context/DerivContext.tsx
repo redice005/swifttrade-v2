@@ -36,6 +36,10 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!token) return
 
+    // Clear stale balance immediately when switching accounts
+    // so the UI shows a loading state instead of the old account's number
+    setBalance(null)
+
     const connect = async () => {
       try {
         const accs = await getDerivAccounts(token)
