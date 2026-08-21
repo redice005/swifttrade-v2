@@ -325,6 +325,8 @@ export default function Analysis() {
           style={{
             color: '#6c63ff',
             margin: 0,
+            fontSize:'1.4rem',
+            fontWeight:600,
           }}
         >
           ⚡ Swift Trade
