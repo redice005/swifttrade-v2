@@ -321,16 +321,7 @@ export default function Analysis() {
           marginBottom: '1.5rem',
         }}
       >
-        <h1
-          style={{
-            color: '#6c63ff',
-            margin: 0,
-            fontSize:'1.4rem',
-            fontWeight:600,
-          }}
-        >
-          ⚡ Swift Trade
-        </h1>
+        <h1 style={{ color: '#6c63ff', margin: 0, fontSize: '1.4rem', fontWeight: 600 }}>⚡️ Swift Trade</h1>
 
         <button
           onClick={logout}
