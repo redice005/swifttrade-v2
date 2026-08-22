@@ -2,9 +2,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useDerivSocket } from '@/hooks/useDerivSocket'
 import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
 
-// Your Deriv loginid — only this account gets the balance visibility control.
-// Swap this for import.meta.env.VITE_ADMIN_ACCOUNT_ID if you'd rather keep it out of source.
-const ADMIN_ACCOUNT_ID = 'client_mpktqrqa6wv0'
+// Your Deriv account IDs — only these accounts get the balance visibility control.
+const ADMIN_ACCOUNT_IDS = ['DOT92452526', 'ROT91269698'] // demo, real
 
 type BalanceVisibility = 'visible' | 'hidden'
 
@@ -31,7 +30,7 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [loginid, setLoginid] = useState<string | null>(null)
 
-  const isAdmin = loginid === ADMIN_ACCOUNT_ID
+  const isAdmin = loginid !== null && ADMIN_ACCOUNT_IDS.includes(loginid)
 
   // Per-account, persisted, defaults to 'visible'. Non-admins never read/write this
   // (the control isn't rendered for them), so it has no effect on other users.
@@ -79,13 +78,7 @@ export function DerivProvider({ children }: { children: ReactNode }) {
           window.location.href = '/login'
           return
         }
-        // TEMP DEBUG — remove once you've confirmed the right identifier field below.
-        // Check your browser console after reloading, then tell me which field
-        // reliably identifies YOUR account so we can lock ADMIN_ACCOUNT_ID to it.
-        console.log('DERIV ACCOUNTS:', JSON.stringify(accs, null, 2))
-
         const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
-        console.log('SELECTED ACCOUNT:', JSON.stringify(acc, null, 2))
         setLoginid(acc.account_id)
         const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
         if (!url) {
