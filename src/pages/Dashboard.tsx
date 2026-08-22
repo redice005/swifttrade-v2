@@ -3,7 +3,10 @@ import { useDeriv } from '@/context/DerivContext'
 import NavBar from '@/components/NavBar'
 
 export default function Dashboard() {
-  const { status, balance, currency, accountType, setAccountType, send, subscribe } = useDeriv()
+  const {
+    status, balance, currency, accountType, setAccountType, send, subscribe,
+    isAdmin, balanceVisibility, setBalanceVisibility,
+  } = useDeriv()
   const [market, setMarket] = useState('R_100')
   const [stake, setStake] = useState('10')
   const [duration, setDuration] = useState('1')
@@ -184,38 +187,60 @@ export default function Dashboard() {
 
       {/* Balance Card */}
       <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.6rem', width: 'fit-content' }}>
-          <button
-            onClick={() => setAccountType('demo')}
-            style={{
-              padding: '0.2rem 0.9rem',
-              borderRadius: '6px',
-              border: 'none',
-              background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: 'bold'
-            }}
-          >
-            Demo
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', width: 'fit-content' }}>
+            <button
+              onClick={() => setAccountType('demo')}
+              style={{
+                padding: '0.2rem 0.9rem',
+                borderRadius: '6px',
+                border: 'none',
+                background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Demo
+            </button>
 
-          <button
-            onClick={() => setAccountType('real')}
-            style={{
-              padding: '0.2rem 0.9rem',
-              borderRadius: '6px',
-              border: 'none',
-              background: accountType === 'real' ? '#6c63ff' : '#0a0a1a',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '0.78rem',
-              fontWeight: 'bold'
-            }}
-          >
-            Real
-          </button>
+            <button
+              onClick={() => setAccountType('real')}
+              style={{
+                padding: '0.2rem 0.9rem',
+                borderRadius: '6px',
+                border: 'none',
+                background: accountType === 'real' ? '#6c63ff' : '#0a0a1a',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                fontWeight: 'bold'
+              }}
+            >
+              Real
+            </button>
+          </div>
+
+          {/* Admin-only balance visibility control — only ever rendered for isAdmin accounts */}
+          {isAdmin && (
+            <select
+              value={balanceVisibility}
+              onChange={e => setBalanceVisibility(e.target.value as 'visible' | 'hidden')}
+              style={{
+                padding: '0.25rem 0.5rem',
+                background: '#0a0a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="visible">Show Balance</option>
+              <option value="hidden">Hide Balance</option>
+            </select>
+          )}
         </div>
 
         <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>
@@ -265,7 +290,7 @@ export default function Dashboard() {
               )}
 
               <h2 style={{ margin: 0, fontSize: '1.3rem' }}>
-                {balance.toFixed(2)}
+                {isAdmin && balanceVisibility === 'hidden' ? '••••••' : balance.toFixed(2)}
               </h2>
             </div>
           ) : (
