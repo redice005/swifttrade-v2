@@ -2,6 +2,12 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useDerivSocket } from '@/hooks/useDerivSocket'
 import { getDerivAccounts, getDerivWebSocketUrl } from '@/lib/deriv'
 
+// Your Deriv loginid — only this account gets the balance visibility control.
+// Swap this for import.meta.env.VITE_ADMIN_ACCOUNT_ID if you'd rather keep it out of source.
+const ADMIN_ACCOUNT_ID = 'client_mpktqrqa6wv0'
+
+type BalanceVisibility = 'visible' | 'hidden'
+
 type DerivContextType = {
   status: 'idle' | 'open' | 'closed'
   send: (payload: Record<string, any>) => number | null
@@ -10,6 +16,9 @@ type DerivContextType = {
   currency: string
   accountType: 'demo' | 'real'
   setAccountType: (type: 'demo' | 'real') => void
+  isAdmin: boolean
+  balanceVisibility: BalanceVisibility
+  setBalanceVisibility: (v: BalanceVisibility) => void
 }
 
 const DerivContext = createContext<DerivContextType | null>(null)
@@ -20,6 +29,28 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   const [balance, setBalance] = useState<number | null>(null)
   const [currency, setCurrency] = useState('USD')
   const [token, setToken] = useState<string | null>(null)
+  const [loginid, setLoginid] = useState<string | null>(null)
+
+  const isAdmin = loginid === ADMIN_ACCOUNT_ID
+
+  // Per-account, persisted, defaults to 'visible'. Non-admins never read/write this
+  // (the control isn't rendered for them), so it has no effect on other users.
+  const [balanceVisibility, setBalanceVisibilityState] = useState<BalanceVisibility>('visible')
+
+  useEffect(() => {
+    if (!loginid) return
+    const stored = localStorage.getItem(`balance_visibility_${loginid}`)
+    if (stored === 'hidden' || stored === 'visible') {
+      setBalanceVisibilityState(stored)
+    }
+  }, [loginid])
+
+  const setBalanceVisibility = (v: BalanceVisibility) => {
+    setBalanceVisibilityState(v)
+    if (loginid) {
+      localStorage.setItem(`balance_visibility_${loginid}`, v)
+    }
+  }
 
   // Read token reactively — not just once at mount
   useEffect(() => {
@@ -48,7 +79,14 @@ export function DerivProvider({ children }: { children: ReactNode }) {
           window.location.href = '/login'
           return
         }
+        // TEMP DEBUG — remove once you've confirmed the right identifier field below.
+        // Check your browser console after reloading, then tell me which field
+        // reliably identifies YOUR account so we can lock ADMIN_ACCOUNT_ID to it.
+        console.log('DERIV ACCOUNTS:', JSON.stringify(accs, null, 2))
+
         const acc = accs.find((a: any) => a.account_type === accountType) || accs[0]
+        console.log('SELECTED ACCOUNT:', JSON.stringify(acc, null, 2))
+        setLoginid(acc.account_id)
         const url = await getDerivWebSocketUrl(acc.account_id, token, accountType)
         if (!url) {
           localStorage.removeItem('deriv_token')
@@ -80,7 +118,10 @@ export function DerivProvider({ children }: { children: ReactNode }) {
   }, [status])
 
   return (
-    <DerivContext.Provider value={{ status, send, subscribe, balance, currency, accountType, setAccountType }}>
+    <DerivContext.Provider value={{
+      status, send, subscribe, balance, currency, accountType, setAccountType,
+      isAdmin, balanceVisibility, setBalanceVisibility,
+    }}>
       {children}
     </DerivContext.Provider>
   )
