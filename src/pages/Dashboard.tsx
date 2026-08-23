@@ -19,8 +19,14 @@ export default function Dashboard() {
   const [contractCategory, setContractCategory] = useState('rise_fall')
   const [barrier, setBarrier] = useState('5')
 
-  const [customBalanceEnabled, setCustomBalanceEnabled] = useState(false)
-  const [customBalance, setCustomBalance] = useState('')
+  const [customBalanceEnabled, setCustomBalanceEnabled] = useState(() => {
+    return localStorage.getItem('swifttrade_custom_balance_enabled') === 'true'
+  })
+
+  const [customBalance, setCustomBalance] = useState(() => {
+    return localStorage.getItem('swifttrade_custom_balance') || ''
+  })
+
   const [adminToolsOpen, setAdminToolsOpen] = useState(false)
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -134,6 +140,45 @@ export default function Dashboard() {
     }
   }, [status, market])
 
+  // Persist custom display balance
+  useEffect(() => {
+    localStorage.setItem(
+      'swifttrade_custom_balance',
+      customBalance
+    )
+  }, [customBalance])
+
+  // Persist whether custom display balance is enabled
+  useEffect(() => {
+    localStorage.setItem(
+      'swifttrade_custom_balance_enabled',
+      String(customBalanceEnabled)
+    )
+  }, [customBalanceEnabled])
+
+  // Persist balance visibility
+  useEffect(() => {
+    if (balanceVisibility) {
+      localStorage.setItem(
+        'swifttrade_balance_visibility',
+        balanceVisibility
+      )
+    }
+  }, [balanceVisibility])
+
+  // Restore saved balance visibility
+  useEffect(() => {
+    const savedVisibility =
+      localStorage.getItem('swifttrade_balance_visibility')
+
+    if (
+      savedVisibility === 'visible' ||
+      savedVisibility === 'hidden'
+    ) {
+      setBalanceVisibility(savedVisibility)
+    }
+  }, [])
+
   const placeContract = (type: string) => {
     if (!send || tradeActiveRef.current) return
 
@@ -206,10 +251,13 @@ export default function Dashboard() {
 
   const displayedCustomBalance =
     customBalance !== ''
-      ? Number(customBalance.replace(/,/g, '')).toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })
+      ? Number(customBalance.replace(/,/g, '')).toLocaleString(
+          'en-US',
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        )
       : ''
 
   return (
@@ -886,7 +934,13 @@ export default function Dashboard() {
             }}
           >
             <span>Admin Tools</span>
-            <span style={{ color: '#aaa', fontSize: '0.75rem' }}>
+
+            <span
+              style={{
+                color: '#aaa',
+                fontSize: '0.75rem'
+              }}
+            >
               {adminToolsOpen ? '▲' : '▼'}
             </span>
           </button>
@@ -910,6 +964,7 @@ export default function Dashboard() {
                   gap: '0.5rem'
                 }}
               >
+                {/* Show Balance */}
                 <button
                   onClick={() => {
                     setBalanceVisibility('visible')
@@ -935,6 +990,7 @@ export default function Dashboard() {
                   Show Balance
                 </button>
 
+                {/* Hide Balance */}
                 <button
                   onClick={() => {
                     setBalanceVisibility('hidden')
@@ -959,6 +1015,7 @@ export default function Dashboard() {
                   Hide Balance
                 </button>
 
+                {/* Set Display Balance */}
                 <button
                   onClick={() => {
                     setCustomBalanceEnabled(true)
@@ -984,6 +1041,7 @@ export default function Dashboard() {
                 </button>
               </div>
 
+              {/* Custom balance input */}
               {customBalanceEnabled && (
                 <div
                   style={{
@@ -1030,7 +1088,7 @@ export default function Dashboard() {
                       fontSize: '0.68rem'
                     }}
                   >
-                    This changes the displayed value only.This feature is only visible to the admin and not any other users 
+                   This changes the displayed value only.This feature is only visible to the admin and not any other users 
                   </p>
                 </div>
               )}
