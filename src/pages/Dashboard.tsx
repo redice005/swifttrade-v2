@@ -23,6 +23,9 @@ export default function Dashboard() {
   const [customBalanceEnabled, setCustomBalanceEnabled] = useState(false)
   const [customBalance, setCustomBalance] = useState('')
 
+  // Admin tools collapsed by default
+  const [adminToolsOpen, setAdminToolsOpen] = useState(false)
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryPayloadRef = useRef<any>(null)
   const hasRetriedRef = useRef(false)
@@ -835,184 +838,175 @@ export default function Dashboard() {
           style={{
             background: '#1a1a2e',
             borderRadius: '12px',
-            padding: '1.5rem',
+            padding: '1rem',
             marginTop: '1rem'
           }}
         >
-          <p
+          <button
+            onClick={() => setAdminToolsOpen(prev => !prev)}
             style={{
-              color: '#aaa',
-              margin: '0 0 0.75rem',
-              fontSize: '0.8rem'
-            }}
-          >
-            Admin — Balance Display
-          </p>
-
-          {/* Three balance options */}
-          <div
-            style={{
+              width: '100%',
+              padding: '0.75rem',
+              background: '#0a0a1a',
+              color: '#fff',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 'bold',
+              textAlign: 'left',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem'
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}
           >
-            {/* Option 1 — Show Balance */}
-            <button
-              onClick={() => {
-                setBalanceVisibility('visible')
-                setCustomBalanceEnabled(false)
-              }}
-              style={{
-                width: '100%',
-                padding: '0.7rem',
-                background:
-                  balanceVisibility === 'visible' &&
-                  !customBalanceEnabled
-                    ? '#6c63ff'
-                    : '#0a0a1a',
-                color: '#fff',
-                border: '1px solid #333',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                textAlign: 'left'
-              }}
-            >
-              Show Balance
-            </button>
+            <span>Admin Tools</span>
+            <span style={{ color: '#aaa', fontSize: '0.75rem' }}>
+              {adminToolsOpen ? '▲' : '▼'}
+            </span>
+          </button>
 
-            {/* Option 2 — Hide Balance */}
-            <button
-              onClick={() => {
-                setBalanceVisibility('hidden')
-                setCustomBalanceEnabled(false)
-              }}
-              style={{
-                width: '100%',
-                padding: '0.7rem',
-                background:
-                  balanceVisibility === 'hidden'
-                    ? '#6c63ff'
-                    : '#0a0a1a',
-                color: '#fff',
-                border: '1px solid #333',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                textAlign: 'left'
-              }}
-            >
-              Hide Balance
-            </button>
-
-            {/* Option 3 — Set Display Balance */}
-            <button
-              onClick={() => {
-                setCustomBalanceEnabled(true)
-                setBalanceVisibility('visible')
-              }}
-              style={{
-                width: '100%',
-                padding: '0.7rem',
-                background:
-                  customBalanceEnabled
-                    ? '#6c63ff'
-                    : '#0a0a1a',
-                color: '#fff',
-                border: '1px solid #333',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                textAlign: 'left'
-              }}
-            >
-              Set Display Balance
-            </button>
-          </div>
-
-          {/* Custom balance input */}
-          {customBalanceEnabled && (
-            <div
-              style={{
-                marginTop: '0.75rem',
-                padding: '0.8rem',
-                background: '#0f0f20',
-                borderRadius: '8px',
-                border: '1px solid #2d2d42'
-              }}
-            >
+          {adminToolsOpen && (
+            <div style={{ marginTop: '1rem' }}>
               <p
                 style={{
                   color: '#aaa',
-                  margin: '0 0 0.5rem',
-                  fontSize: '0.75rem'
+                  margin: '0 0 0.75rem',
+                  fontSize: '0.8rem'
                 }}
               >
-                Enter display balance ({currency})
+                Balance Display
               </p>
 
-              <input
-                type="text"
-                inputMode="decimal"
-                value={customBalance}
-                onChange={e => {
-                  const value = e.target.value
-
-                  // Allow only digits, commas and one decimal point
-                  const cleaned = value.replace(/[^\d.,]/g, '')
-
-                  // Remove commas before processing
-                  const withoutCommas = cleaned.replace(/,/g, '')
-
-                  // Allow only one decimal point
-                  const parts = withoutCommas.split('.')
-                  const integerPart = parts[0]
-                  const decimalPart = parts.slice(1).join('').slice(0, 2)
-
-                  // Add commas to the integer portion
-                  const formattedInteger = integerPart
-                    ? Number(integerPart).toLocaleString('en-US')
-                    : ''
-
-                  const formatted =
-                    parts.length > 1
-                      ? `${formattedInteger}.${decimalPart}`
-                      : formattedInteger
-
-                  setCustomBalance(formatted)
-                }}
-                placeholder="e.g. 15,777.00"
+              {/* Three balance options */}
+              <div
                 style={{
-                  width: '100%',
-                  padding: '0.7rem',
-                  background: '#0a0a1a',
-                  color: '#fff',
-                  border: '1px solid #333',
-                  borderRadius: '7px',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box',
-                  marginBottom: '0.5rem'
-                }}
-              />
-
-              <p
-                style={{
-                  color: '#666',
-                  margin: 0,
-                  fontSize: '0.68rem'
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
                 }}
               >
-                This changes the displayed value only. It does
-                not change the actual account balance.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
+                {/* Option 1 — Show Balance */}
+                <button
+                  onClick={() => {
+                    setBalanceVisibility('visible')
+                    setCustomBalanceEnabled(false)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem',
+                    background:
+                      balanceVisibility === 'visible' &&
+                      !customBalanceEnabled
+                        ? '#6c63ff'
+                        : '#0a0a1a',
+                    color: '#fff',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    textAlign: 'left'
+                  }}
+                >
+                  Show Balance
+                </button>
+
+                {/* Option 2 — Hide Balance */}
+                <button
+                  onClick={() => {
+                    setBalanceVisibility('hidden')
+                    setCustomBalanceEnabled(false)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem',
+                    background:
+                      balanceVisibility === 'hidden'
+                        ? '#6c63ff'
+                        : '#0a0a1a',
+                    color: '#fff',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    textAlign: 'left'
+                  }}
+                >
+                  Hide Balance
+                </button>
+
+                {/* Option 3 — Set Display Balance */}
+                <button
+                  onClick={() => {
+                    setCustomBalanceEnabled(true)
+                    setBalanceVisibility('visible')
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem',
+                    background:
+                      customBalanceEnabled
+                        ? '#6c63ff'
+                        : '#0a0a1a',
+                    color: '#fff',
+                    border: '1px solid #333',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    textAlign: 'left'
+                  }}
+                >
+                  Set Display Balance
+                </button>
+              </div>
+
+              {/* Custom balance input */}
+              {customBalanceEnabled && (
+                <div
+                  style={{
+                    marginTop: '0.75rem',
+                    padding: '0.8rem',
+                    background: '#0f0f20',
+                    borderRadius: '8px',
+                    border: '1px solid #2d2d42'
+                  }}
+                >
+                  <p
+                    style={{
+                      color: '#aaa',
+                      margin: '0 0 0.5rem',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    Enter display balance ({currency})
+                  </p>
+
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={customBalance}
+                    onChange={e => {
+                      const value = e.target.value
+
+                      // Allow only digits, commas and one decimal point
+                      const cleaned = value.replace(/[^\d.,]/g, '')
+
+                      // Remove commas before processing
+                      const withoutCommas = cleaned.replace(/,/g, '')
+
+                      // Allow only one decimal point
+                      const parts = withoutCommas.split('.')
+                      const integerPart = parts[0]
+                      const decimalPart = parts.slice(1).join('').slice(0, 2)
+
+                      // Add commas to the integer portion
+                      const formattedInteger = integerPart
+                        ? Number(integerPart).toLocaleString('en-US')
+                        : ''
+
+                      const formatted =
+                        parts.length > 1
+                          ? `${formatted
