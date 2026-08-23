@@ -353,14 +353,14 @@ export default function Dashboard() {
                   fontSize: '1.05rem',
                   display: 'flex',
                   alignItems: 'baseline',
-                  gap: '0.2rem'
+                  gap: '0.15rem'
                 }}
               >
                 <span
                   style={{
-                    fontSize: '0.75rem',
-                    color: '#aaa',
-                    fontWeight: 500
+                    fontSize: '1.05rem',
+                    color: '#fff',
+                    fontWeight: 700
                   }}
                 >
                   {currency === 'USD' ? '$' : currency}
@@ -397,20 +397,22 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.22rem 0.5rem',
+                padding: '0.3rem 0.4rem',
                 background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
                 borderRadius: '5px',
                 cursor: 'pointer',
-                fontSize: '0.62rem',
+                fontSize: '0.58rem',
                 fontWeight: 'bold',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '0.25rem'
+                gap: '0.15rem',
+                minWidth: '42px'
               }}
             >
-              <Plus size={11} />
+              <Plus size={13} />
               Deposit
             </button>
 
@@ -422,20 +424,22 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.22rem 0.5rem',
+                padding: '0.3rem 0.4rem',
                 background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
                 borderRadius: '5px',
                 cursor: 'pointer',
-                fontSize: '0.62rem',
+                fontSize: '0.58rem',
                 fontWeight: 'bold',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '0.25rem'
+                gap: '0.15rem',
+                minWidth: '42px'
               }}
             >
-              <ArrowLeftRight size={11} />
+              <ArrowLeftRight size={13} />
               Transfer
             </button>
 
@@ -447,20 +451,22 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.22rem 0.5rem',
+                padding: '0.3rem 0.4rem',
                 background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
                 borderRadius: '5px',
                 cursor: 'pointer',
-                fontSize: '0.62rem',
+                fontSize: '0.58rem',
                 fontWeight: 'bold',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '0.25rem'
+                gap: '0.15rem',
+                minWidth: '42px'
               }}
             >
-              <Minus size={11} />
+              <Minus size={13} />
               Withdraw
             </button>
           </div>
@@ -972,7 +978,8 @@ export default function Dashboard() {
                   fontSize: '0.68rem'
                 }}
               >
-                This changes the displayed value only.This features is only available to the admin and not other users
+                This changes the displayed value only. It does
+                not change the actual account balance.
               </p>
             </div>
           )}
