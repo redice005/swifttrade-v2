@@ -19,11 +19,8 @@ export default function Dashboard() {
   const [contractCategory, setContractCategory] = useState('rise_fall')
   const [barrier, setBarrier] = useState('5')
 
-  // Third balance functionality
   const [customBalanceEnabled, setCustomBalanceEnabled] = useState(false)
   const [customBalance, setCustomBalance] = useState('')
-
-  // Admin tools collapsed by default
   const [adminToolsOpen, setAdminToolsOpen] = useState(false)
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -183,6 +180,38 @@ export default function Dashboard() {
     return '#aaa'
   }
 
+  const handleCustomBalanceChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value
+
+    const cleaned = value.replace(/[^\d.,]/g, '')
+    const withoutCommas = cleaned.replace(/,/g, '')
+    const parts = withoutCommas.split('.')
+
+    const integerPart = parts[0]
+    const decimalPart = parts.slice(1).join('').slice(0, 2)
+
+    const formattedInteger = integerPart
+      ? Number(integerPart).toLocaleString('en-US')
+      : ''
+
+    const formatted =
+      parts.length > 1
+        ? `${formattedInteger}.${decimalPart}`
+        : formattedInteger
+
+    setCustomBalance(formatted)
+  }
+
+  const displayedCustomBalance =
+    customBalance !== ''
+      ? Number(customBalance.replace(/,/g, '')).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })
+      : ''
+
   return (
     <div
       style={{
@@ -203,6 +232,7 @@ export default function Dashboard() {
         }
       `}</style>
 
+      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -368,16 +398,11 @@ export default function Dashboard() {
                 >
                   {currency === 'USD' ? '$' : currency}
                 </span>
+
                 {isAdmin && balanceVisibility === 'hidden'
                   ? '••••••'
                   : customBalanceEnabled && customBalance !== ''
-                    ? Number(customBalance.replace(/,/g, '')).toLocaleString(
-                        'en-US',
-                        {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        }
-                      )
+                    ? displayedCustomBalance
                     : balance.toFixed(2)}
               </h2>
             </div>
@@ -832,7 +857,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Admin-only balance controls */}
+      {/* Admin-only tools */}
       {isAdmin && (
         <div
           style={{
@@ -878,7 +903,6 @@ export default function Dashboard() {
                 Balance Display
               </p>
 
-              {/* Three balance options */}
               <div
                 style={{
                   display: 'flex',
@@ -886,7 +910,6 @@ export default function Dashboard() {
                   gap: '0.5rem'
                 }}
               >
-                {/* Option 1 — Show Balance */}
                 <button
                   onClick={() => {
                     setBalanceVisibility('visible')
@@ -912,7 +935,6 @@ export default function Dashboard() {
                   Show Balance
                 </button>
 
-                {/* Option 2 — Hide Balance */}
                 <button
                   onClick={() => {
                     setBalanceVisibility('hidden')
@@ -937,7 +959,6 @@ export default function Dashboard() {
                   Hide Balance
                 </button>
 
-                {/* Option 3 — Set Display Balance */}
                 <button
                   onClick={() => {
                     setCustomBalanceEnabled(true)
@@ -963,7 +984,6 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Custom balance input */}
               {customBalanceEnabled && (
                 <div
                   style={{
@@ -988,25 +1008,36 @@ export default function Dashboard() {
                     type="text"
                     inputMode="decimal"
                     value={customBalance}
-                    onChange={e => {
-                      const value = e.target.value
+                    onChange={handleCustomBalanceChange}
+                    placeholder="e.g. 15,777.00"
+                    style={{
+                      width: '100%',
+                      padding: '0.7rem',
+                      background: '#0a0a1a',
+                      color: '#fff',
+                      border: '1px solid #333',
+                      borderRadius: '7px',
+                      fontSize: '0.85rem',
+                      boxSizing: 'border-box',
+                      marginBottom: '0.5rem'
+                    }}
+                  />
 
-                      // Allow only digits, commas and one decimal point
-                      const cleaned = value.replace(/[^\d.,]/g, '')
-
-                      // Remove commas before processing
-                      const withoutCommas = cleaned.replace(/,/g, '')
-
-                      // Allow only one decimal point
-                      const parts = withoutCommas.split('.')
-                      const integerPart = parts[0]
-                      const decimalPart = parts.slice(1).join('').slice(0, 2)
-
-                      // Add commas to the integer portion
-                      const formattedInteger = integerPart
-                        ? Number(integerPart).toLocaleString('en-US')
-                        : ''
-
-                      const formatted =
-                        parts.length > 1
-                          ? `${formatted
+                  <p
+                    style={{
+                      color: '#666',
+                      margin: 0,
+                      fontSize: '0.68rem'
+                    }}
+                  >
+                    This changes the displayed value only.This feature is only visible to the admin and not any other users 
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
