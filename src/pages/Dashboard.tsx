@@ -18,7 +18,7 @@ export default function Dashboard() {
   const [contractCategory, setContractCategory] = useState('rise_fall')
   const [barrier, setBarrier] = useState('5')
 
-  // Custom display balance
+  // Third balance functionality
   const [customBalanceEnabled, setCustomBalanceEnabled] = useState(false)
   const [customBalance, setCustomBalance] = useState('')
 
@@ -258,8 +258,7 @@ export default function Dashboard() {
               padding: '0.2rem 0.9rem',
               borderRadius: '6px',
               border: 'none',
-              background:
-                accountType === 'demo' ? '#6c63ff' : '#0a0a1a',
+              background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a',
               color: '#fff',
               cursor: 'pointer',
               fontSize: '0.78rem',
@@ -275,8 +274,7 @@ export default function Dashboard() {
               padding: '0.2rem 0.9rem',
               borderRadius: '6px',
               border: 'none',
-              background:
-                accountType === 'real' ? '#6c63ff' : '#0a0a1a',
+              background: accountType === 'real' ? '#6c63ff' : '#0a0a1a',
               color: '#fff',
               cursor: 'pointer',
               fontSize: '0.78rem',
@@ -302,8 +300,7 @@ export default function Dashboard() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginTop: '0.25rem',
-            gap: '0.75rem'
+            marginTop: '0.25rem'
           }}
         >
           {balance !== null ? (
@@ -328,8 +325,7 @@ export default function Dashboard() {
                     fontSize: '0.95rem',
                     fontWeight: '800',
                     flexShrink: 0,
-                    boxShadow:
-                      '0 2px 8px rgba(22,163,74,0.35)'
+                    boxShadow: '0 2px 8px rgba(22,163,74,0.35)'
                   }}
                 >
                   D
@@ -448,120 +444,6 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-
-        {/* Third functionality: Custom display balance */}
-        <div
-          style={{
-            marginTop: '0.9rem',
-            paddingTop: '0.8rem',
-            borderTop: '1px solid #2a2a3d'
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-              flexWrap: 'wrap'
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  color: '#aaa',
-                  margin: '0 0 0.2rem',
-                  fontSize: '0.72rem'
-                }}
-              >
-                Display Balance
-              </p>
-
-              <p
-                style={{
-                  color: '#666',
-                  margin: 0,
-                  fontSize: '0.68rem'
-                }}
-              >
-                Changes the displayed value only
-              </p>
-            </div>
-
-            <button
-              onClick={() =>
-                setCustomBalanceEnabled(prev => !prev)
-              }
-              style={{
-                padding: '0.35rem 0.65rem',
-                background: customBalanceEnabled
-                  ? '#16a34a'
-                  : '#0a0a1a',
-                color: '#fff',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.7rem',
-                fontWeight: 'bold'
-              }}
-            >
-              {customBalanceEnabled
-                ? 'Use Live Balance'
-                : 'Set Display Balance'}
-            </button>
-          </div>
-
-          {customBalanceEnabled && (
-            <div
-              style={{
-                display: 'flex',
-                gap: '0.5rem',
-                alignItems: 'center',
-                marginTop: '0.65rem'
-              }}
-            >
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={customBalance}
-                onChange={e =>
-                  setCustomBalance(e.target.value)
-                }
-                placeholder={`Enter ${currency} balance`}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '0.55rem 0.65rem',
-                  background: '#0a0a1a',
-                  color: '#fff',
-                  border: '1px solid #333',
-                  borderRadius: '7px',
-                  fontSize: '0.8rem',
-                  boxSizing: 'border-box'
-                }}
-              />
-
-              <button
-                onClick={() => {
-                  setCustomBalance('')
-                  setCustomBalanceEnabled(false)
-                }}
-                style={{
-                  padding: '0.55rem 0.7rem',
-                  background: 'transparent',
-                  color: '#aaa',
-                  border: '1px solid #333',
-                  borderRadius: '7px',
-                  cursor: 'pointer',
-                  fontSize: '0.72rem'
-                }}
-              >
-                Reset
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Market */}
@@ -573,12 +455,7 @@ export default function Dashboard() {
           marginBottom: '1rem'
         }}
       >
-        <p
-          style={{
-            color: '#aaa',
-            margin: '0 0 0.5rem'
-          }}
-        >
+        <p style={{ color: '#aaa', margin: '0 0 0.5rem' }}>
           Market
         </p>
 
@@ -636,12 +513,7 @@ export default function Dashboard() {
               CURRENT PRICE
             </p>
 
-            <h2
-              style={{
-                margin: 0,
-                fontSize: '2rem'
-              }}
-            >
+            <h2 style={{ margin: 0, fontSize: '2rem' }}>
               {currentPrice.toFixed(4)}
             </h2>
           </div>
@@ -656,12 +528,7 @@ export default function Dashboard() {
           padding: '1.5rem'
         }}
       >
-        <p
-          style={{
-            color: '#aaa',
-            margin: '0 0 1rem'
-          }}
-        >
+        <p style={{ color: '#aaa', margin: '0 0 1rem' }}>
           Place a contract
         </p>
 
@@ -806,12 +673,7 @@ export default function Dashboard() {
           </p>
         )}
 
-        <div
-          style={{
-            display: 'flex',
-            gap: '1rem'
-          }}
-        >
+        <div style={{ display: 'flex', gap: '1rem' }}>
           {contractCategory === 'rise_fall' && (
             <>
               <button
@@ -934,7 +796,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Admin-only balance visibility control */}
+      {/* Admin-only balance controls */}
       {isAdmin && (
         <div
           style={{
@@ -947,34 +809,153 @@ export default function Dashboard() {
           <p
             style={{
               color: '#aaa',
-              margin: '0 0 0.5rem',
+              margin: '0 0 0.75rem',
               fontSize: '0.8rem'
             }}
           >
             Admin — Balance Display
           </p>
 
-          <select
-            value={balanceVisibility}
-            onChange={e =>
-              setBalanceVisibility(
-                e.target.value as 'visible' | 'hidden'
-              )
-            }
+          {/* Three balance options */}
+          <div
             style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: '#0a0a1a',
-              color: '#fff',
-              border: '1px solid #333',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              cursor: 'pointer'
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem'
             }}
           >
-            <option value="visible">Show Balance</option>
-            <option value="hidden">Hide Balance</option>
-          </select>
+            {/* Option 1 — Show Balance */}
+            <button
+              onClick={() => {
+                setBalanceVisibility('visible')
+                setCustomBalanceEnabled(false)
+              }}
+              style={{
+                width: '100%',
+                padding: '0.7rem',
+                background:
+                  balanceVisibility === 'visible' &&
+                  !customBalanceEnabled
+                    ? '#6c63ff'
+                    : '#0a0a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                textAlign: 'left'
+              }}
+            >
+              Show Balance
+            </button>
+
+            {/* Option 2 — Hide Balance */}
+            <button
+              onClick={() => {
+                setBalanceVisibility('hidden')
+                setCustomBalanceEnabled(false)
+              }}
+              style={{
+                width: '100%',
+                padding: '0.7rem',
+                background:
+                  balanceVisibility === 'hidden'
+                    ? '#6c63ff'
+                    : '#0a0a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                textAlign: 'left'
+              }}
+            >
+              Hide Balance
+            </button>
+
+            {/* Option 3 — Set Display Balance */}
+            <button
+              onClick={() => {
+                setCustomBalanceEnabled(true)
+                setBalanceVisibility('visible')
+              }}
+              style={{
+                width: '100%',
+                padding: '0.7rem',
+                background:
+                  customBalanceEnabled
+                    ? '#6c63ff'
+                    : '#0a0a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                textAlign: 'left'
+              }}
+            >
+              Set Display Balance
+            </button>
+          </div>
+
+          {/* Custom balance input */}
+          {customBalanceEnabled && (
+            <div
+              style={{
+                marginTop: '0.75rem',
+                padding: '0.8rem',
+                background: '#0f0f20',
+                borderRadius: '8px',
+                border: '1px solid #2d2d42'
+              }}
+            >
+              <p
+                style={{
+                  color: '#aaa',
+                  margin: '0 0 0.5rem',
+                  fontSize: '0.75rem'
+                }}
+              >
+                Enter display balance ({currency})
+              </p>
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={customBalance}
+                onChange={e =>
+                  setCustomBalance(e.target.value)
+                }
+                placeholder="e.g. 1000.00"
+                style={{
+                  width: '100%',
+                  padding: '0.7rem',
+                  background: '#0a0a1a',
+                  color: '#fff',
+                  border: '1px solid #333',
+                  borderRadius: '7px',
+                  fontSize: '0.85rem',
+                  boxSizing: 'border-box',
+                  marginBottom: '0.5rem'
+                }}
+              />
+
+              <p
+                style={{
+                  color: '#666',
+                  margin: 0,
+                  fontSize: '0.68rem'
+                }}
+              >
+                This changes the displayed value only. It does
+                not change the actual account balance.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
