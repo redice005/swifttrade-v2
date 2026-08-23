@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Plus, ArrowLeftRight, Minus } from 'lucide-react'
 import { useDeriv } from '@/context/DerivContext'
 import NavBar from '@/components/NavBar'
 
@@ -396,16 +397,20 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.22rem 0.45rem',
+                padding: '0.22rem 0.5rem',
                 background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
                 borderRadius: '5px',
                 cursor: 'pointer',
                 fontSize: '0.62rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
               }}
             >
+              <Plus size={11} />
               Deposit
             </button>
 
@@ -417,16 +422,20 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.22rem 0.45rem',
+                padding: '0.22rem 0.5rem',
                 background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
                 borderRadius: '5px',
                 cursor: 'pointer',
                 fontSize: '0.62rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
               }}
             >
+              <ArrowLeftRight size={11} />
               Transfer
             </button>
 
@@ -438,16 +447,20 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.22rem 0.45rem',
+                padding: '0.22rem 0.5rem',
                 background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
                 borderRadius: '5px',
                 cursor: 'pointer',
                 fontSize: '0.62rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
               }}
             >
+              <Minus size={11} />
               Withdraw
             </button>
           </div>
