@@ -972,8 +972,7 @@ export default function Dashboard() {
                   fontSize: '0.68rem'
                 }}
               >
-                This changes the displayed value only. It does
-                not change the actual account balance.
+                This changes the displayed value only.This features is only available to the admin qnd not other users
               </p>
             </div>
           )}
