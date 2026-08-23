@@ -7,6 +7,7 @@ export default function Dashboard() {
     status, balance, currency, accountType, setAccountType, send, subscribe,
     isAdmin, balanceVisibility, setBalanceVisibility,
   } = useDeriv()
+
   const [market, setMarket] = useState('R_100')
   const [stake, setStake] = useState('10')
   const [duration, setDuration] = useState('1')
@@ -16,6 +17,10 @@ export default function Dashboard() {
   const [message, setMessage] = useState('')
   const [contractCategory, setContractCategory] = useState('rise_fall')
   const [barrier, setBarrier] = useState('5')
+
+  // Custom display balance
+  const [customBalanceEnabled, setCustomBalanceEnabled] = useState(false)
+  const [customBalance, setCustomBalance] = useState('')
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryPayloadRef = useRef<any>(null)
@@ -42,6 +47,7 @@ export default function Dashboard() {
 
   const startTradeTimeout = (payload: any) => {
     clearTradeTimeout()
+
     timeoutRef.current = setTimeout(() => {
       if (!hasRetriedRef.current) {
         hasRetriedRef.current = true
@@ -57,6 +63,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (status !== 'open') return
+
     activeContractIdRef.current = null
 
     const unsub = subscribe((data) => {
@@ -66,30 +73,44 @@ export default function Dashboard() {
 
       if (data.msg_type === 'proposal') {
         if (!tradeActiveRef.current) return
+
         clearTradeTimeout()
+
         if (data.error) {
           resetTradeState()
           setMessage(`Error: ${data.error.message}`)
         } else {
-          send({ buy: data.proposal.id, price: parseFloat(stake) })
+          send({
+            buy: data.proposal.id,
+            price: parseFloat(stake)
+          })
+
           startTradeTimeout(retryPayloadRef.current)
         }
       }
 
       if (data.msg_type === 'buy') {
         if (!tradeActiveRef.current) return
+
         clearTradeTimeout()
+
         if (data.error) {
           resetTradeState()
           setMessage(`Error: ${data.error.message}`)
         } else {
           activeContractIdRef.current = data.buy.contract_id
-          send({ proposal_open_contract: 1, subscribe: 1, contract_id: data.buy.contract_id })
+
+          send({
+            proposal_open_contract: 1,
+            subscribe: 1,
+            contract_id: data.buy.contract_id
+          })
         }
       }
 
       if (data.msg_type === 'proposal_open_contract') {
         const contract = data.proposal_open_contract
+
         if (contract.contract_id !== activeContractIdRef.current) return
 
         if (contract.status === 'won') {
@@ -102,7 +123,10 @@ export default function Dashboard() {
       }
     })
 
-    send({ ticks: market, subscribe: 1 })
+    send({
+      ticks: market,
+      subscribe: 1
+    })
 
     return () => {
       unsub()
@@ -114,6 +138,7 @@ export default function Dashboard() {
 
     tradeActiveRef.current = true
     hasRetriedRef.current = false
+
     setLoading(true)
     setPlacing(true)
     setMessage('')
@@ -135,6 +160,7 @@ export default function Dashboard() {
     }
 
     retryPayloadRef.current = payload
+
     send(payload)
     startTradeTimeout(payload)
   }
@@ -149,11 +175,19 @@ export default function Dashboard() {
     if (message.includes('Won')) return '#22c55e'
     if (message.includes('Lost')) return '#ef4444'
     if (message.includes('Retry')) return '#f59e0b'
+
     return '#aaa'
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#fff', padding: '1rem' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#0a0a1a',
+        color: '#fff',
+        padding: '1rem'
+      }}
+    >
       <style>{`
         @keyframes placing-pulse {
           0%, 100% { opacity: 1; }
@@ -165,8 +199,24 @@ export default function Dashboard() {
         }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ color: '#6c63ff', margin: 0 ,fontSize:'1.4rem' ,fontWeight:600 }}>⚡️ Swift Trade</h1>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.5rem'
+        }}
+      >
+        <h1
+          style={{
+            color: '#6c63ff',
+            margin: 0,
+            fontSize: '1.4rem',
+            fontWeight: 600
+          }}
+        >
+          ⚡️ Swift Trade
+        </h1>
 
         <button
           onClick={logout}
@@ -186,70 +236,84 @@ export default function Dashboard() {
       <NavBar />
 
       {/* Balance Card */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
-          <div style={{ display: 'flex', gap: '0.4rem', width: 'fit-content' }}>
-            <button
-              onClick={() => setAccountType('demo')}
-              style={{
-                padding: '0.2rem 0.9rem',
-                borderRadius: '6px',
-                border: 'none',
-                background: accountType === 'demo' ? '#6c63ff' : '#0a0a1a',
-                color: '#fff',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: 'bold'
-              }}
-            >
-              Demo
-            </button>
+      <div
+        style={{
+          background: '#1a1a2e',
+          borderRadius: '12px',
+          padding: '1rem',
+          marginBottom: '1rem'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.4rem',
+            width: 'fit-content',
+            marginBottom: '0.6rem'
+          }}
+        >
+          <button
+            onClick={() => setAccountType('demo')}
+            style={{
+              padding: '0.2rem 0.9rem',
+              borderRadius: '6px',
+              border: 'none',
+              background:
+                accountType === 'demo' ? '#6c63ff' : '#0a0a1a',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: 'bold'
+            }}
+          >
+            Demo
+          </button>
 
-            <button
-              onClick={() => setAccountType('real')}
-              style={{
-                padding: '0.2rem 0.9rem',
-                borderRadius: '6px',
-                border: 'none',
-                background: accountType === 'real' ? '#6c63ff' : '#0a0a1a',
-                color: '#fff',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-                fontWeight: 'bold'
-              }}
-            >
-              Real
-            </button>
-          </div>
-
-          {/* Admin-only balance visibility control — only ever rendered for isAdmin accounts */}
-          {isAdmin && (
-            <select
-              value={balanceVisibility}
-              onChange={e => setBalanceVisibility(e.target.value as 'visible' | 'hidden')}
-              style={{
-                padding: '0.25rem 0.5rem',
-                background: '#0a0a1a',
-                color: '#fff',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                fontSize: '0.72rem',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="visible">Show Balance</option>
-              <option value="hidden">Hide Balance</option>
-            </select>
-          )}
+          <button
+            onClick={() => setAccountType('real')}
+            style={{
+              padding: '0.2rem 0.9rem',
+              borderRadius: '6px',
+              border: 'none',
+              background:
+                accountType === 'real' ? '#6c63ff' : '#0a0a1a',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: 'bold'
+            }}
+          >
+            Real
+          </button>
         </div>
 
-        <p style={{ color: '#aaa', margin: 0, fontSize: '0.8rem' }}>
+        <p
+          style={{
+            color: '#aaa',
+            margin: 0,
+            fontSize: '0.8rem'
+          }}
+        >
           {accountType === 'demo' ? 'Demo' : 'Real'} Account · {currency}
         </p>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: '0.25rem',
+            gap: '0.75rem'
+          }}
+        >
           {balance !== null ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.55rem'
+              }}
+            >
               {accountType === 'demo' ? (
                 <div
                   style={{
@@ -264,7 +328,8 @@ export default function Dashboard() {
                     fontSize: '0.95rem',
                     fontWeight: '800',
                     flexShrink: 0,
-                    boxShadow: '0 2px 8px rgba(22,163,74,0.35)',
+                    boxShadow:
+                      '0 2px 8px rgba(22,163,74,0.35)'
                   }}
                 >
                   D
@@ -282,26 +347,50 @@ export default function Dashboard() {
                     fontSize: '1.55rem',
                     lineHeight: 1,
                     flexShrink: 0,
-                    overflow: 'hidden',
+                    overflow: 'hidden'
                   }}
                 >
                   🇺🇸
                 </div>
               )}
 
-              <h2 style={{ margin: 0, fontSize: '1.3rem' }}>
-                {isAdmin && balanceVisibility === 'hidden' ? '••••••' : balance.toFixed(2)}
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: '1.3rem'
+                }}
+              >
+                {isAdmin && balanceVisibility === 'hidden'
+                  ? '••••••'
+                  : customBalanceEnabled && customBalance !== ''
+                    ? Number(customBalance).toFixed(2)
+                    : balance.toFixed(2)}
               </h2>
             </div>
           ) : (
-            <span style={{ color: '#666', fontSize: '13px' }}>
+            <span
+              style={{
+                color: '#666',
+                fontSize: '13px'
+              }}
+            >
               Loading...
             </span>
           )}
 
-          <div style={{ display: 'flex', gap: '0.3rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.3rem'
+            }}
+          >
             <button
-              onClick={() => window.open('https://home.deriv.com/dashboard/deposit?from=home', '_blank')}
+              onClick={() =>
+                window.open(
+                  'https://home.deriv.com/dashboard/deposit?from=home',
+                  '_blank'
+                )
+              }
               style={{
                 padding: '0.3rem 0.5rem',
                 background: 'rgba(34,197,94,0.15)',
@@ -317,7 +406,12 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => window.open('https://home.deriv.com/dashboard/transfer?from=home', '_blank')}
+              onClick={() =>
+                window.open(
+                  'https://home.deriv.com/dashboard/transfer?from=home',
+                  '_blank'
+                )
+              }
               style={{
                 padding: '0.3rem 0.5rem',
                 background: 'rgba(108,99,255,0.15)',
@@ -333,7 +427,12 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => window.open('https://home.deriv.com/dashboard/withdraw?from=home', '_blank')}
+              onClick={() =>
+                window.open(
+                  'https://home.deriv.com/dashboard/withdraw?from=home',
+                  '_blank'
+                )
+              }
               style={{
                 padding: '0.3rem 0.5rem',
                 background: 'rgba(245,158,11,0.15)',
@@ -349,11 +448,139 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* Third functionality: Custom display balance */}
+        <div
+          style={{
+            marginTop: '0.9rem',
+            paddingTop: '0.8rem',
+            borderTop: '1px solid #2a2a3d'
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem',
+              flexWrap: 'wrap'
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  color: '#aaa',
+                  margin: '0 0 0.2rem',
+                  fontSize: '0.72rem'
+                }}
+              >
+                Display Balance
+              </p>
+
+              <p
+                style={{
+                  color: '#666',
+                  margin: 0,
+                  fontSize: '0.68rem'
+                }}
+              >
+                Changes the displayed value only
+              </p>
+            </div>
+
+            <button
+              onClick={() =>
+                setCustomBalanceEnabled(prev => !prev)
+              }
+              style={{
+                padding: '0.35rem 0.65rem',
+                background: customBalanceEnabled
+                  ? '#16a34a'
+                  : '#0a0a1a',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: 'bold'
+              }}
+            >
+              {customBalanceEnabled
+                ? 'Use Live Balance'
+                : 'Set Display Balance'}
+            </button>
+          </div>
+
+          {customBalanceEnabled && (
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.5rem',
+                alignItems: 'center',
+                marginTop: '0.65rem'
+              }}
+            >
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={customBalance}
+                onChange={e =>
+                  setCustomBalance(e.target.value)
+                }
+                placeholder={`Enter ${currency} balance`}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: '0.55rem 0.65rem',
+                  background: '#0a0a1a',
+                  color: '#fff',
+                  border: '1px solid #333',
+                  borderRadius: '7px',
+                  fontSize: '0.8rem',
+                  boxSizing: 'border-box'
+                }}
+              />
+
+              <button
+                onClick={() => {
+                  setCustomBalance('')
+                  setCustomBalanceEnabled(false)
+                }}
+                style={{
+                  padding: '0.55rem 0.7rem',
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid #333',
+                  borderRadius: '7px',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem'
+                }}
+              >
+                Reset
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Market */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem', marginBottom: '1rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 0.5rem' }}>Market</p>
+      <div
+        style={{
+          background: '#1a1a2e',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          marginBottom: '1rem'
+        }}
+      >
+        <p
+          style={{
+            color: '#aaa',
+            margin: '0 0 0.5rem'
+          }}
+        >
+          Market
+        </p>
 
         <select
           value={market}
@@ -391,12 +618,30 @@ export default function Dashboard() {
         </select>
 
         {currentPrice && (
-          <div style={{ background: '#060607', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
-            <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
+          <div
+            style={{
+              background: '#060607',
+              borderRadius: '8px',
+              padding: '1rem',
+              marginTop: '0.5rem'
+            }}
+          >
+            <p
+              style={{
+                color: '#aaa',
+                margin: '0 0 0.25rem',
+                fontSize: '0.8rem'
+              }}
+            >
               CURRENT PRICE
             </p>
 
-            <h2 style={{ margin: 0, fontSize: '2rem' }}>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: '2rem'
+              }}
+            >
               {currentPrice.toFixed(4)}
             </h2>
           </div>
@@ -404,12 +649,29 @@ export default function Dashboard() {
       </div>
 
       {/* Place Contract */}
-      <div style={{ background: '#1a1a2e', borderRadius: '12px', padding: '1.5rem' }}>
-        <p style={{ color: '#aaa', margin: '0 0 1rem' }}>
+      <div
+        style={{
+          background: '#1a1a2e',
+          borderRadius: '12px',
+          padding: '1.5rem'
+        }}
+      >
+        <p
+          style={{
+            color: '#aaa',
+            margin: '0 0 1rem'
+          }}
+        >
           Place a contract
         </p>
 
-        <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
+        <p
+          style={{
+            color: '#aaa',
+            margin: '0 0 0.25rem',
+            fontSize: '0.8rem'
+          }}
+        >
           Contract Type
         </p>
 
@@ -433,7 +695,13 @@ export default function Dashboard() {
 
         {contractCategory === 'over_under' && (
           <>
-            <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
+            <p
+              style={{
+                color: '#aaa',
+                margin: '0 0 0.25rem',
+                fontSize: '0.8rem'
+              }}
+            >
               Barrier (0-9)
             </p>
 
@@ -450,7 +718,7 @@ export default function Dashboard() {
                 marginBottom: '1rem'
               }}
             >
-              {[0,1,2,3,4,5,6,7,8,9].map(n => (
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
                 <option key={n} value={n}>
                   {n}
                 </option>
@@ -459,7 +727,13 @@ export default function Dashboard() {
           </>
         )}
 
-        <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
+        <p
+          style={{
+            color: '#aaa',
+            margin: '0 0 0.25rem',
+            fontSize: '0.8rem'
+          }}
+        >
           Stake (USD)
         </p>
 
@@ -479,7 +753,13 @@ export default function Dashboard() {
           }}
         />
 
-        <p style={{ color: '#aaa', margin: '0 0 0.25rem', fontSize: '0.8rem' }}>
+        <p
+          style={{
+            color: '#aaa',
+            margin: '0 0 0.25rem',
+            fontSize: '0.8rem'
+          }}
+        >
           Duration (ticks)
         </p>
 
@@ -515,12 +795,23 @@ export default function Dashboard() {
         )}
 
         {!placing && message && (
-          <p style={{ color: messageColor(), marginBottom: '1rem', fontWeight: 'bold' }}>
+          <p
+            style={{
+              color: messageColor(),
+              marginBottom: '1rem',
+              fontWeight: 'bold'
+            }}
+          >
             {message}
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '1rem'
+          }}
+        >
           {contractCategory === 'rise_fall' && (
             <>
               <button
@@ -642,6 +933,50 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Admin-only balance visibility control */}
+      {isAdmin && (
+        <div
+          style={{
+            background: '#1a1a2e',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            marginTop: '1rem'
+          }}
+        >
+          <p
+            style={{
+              color: '#aaa',
+              margin: '0 0 0.5rem',
+              fontSize: '0.8rem'
+            }}
+          >
+            Admin — Balance Display
+          </p>
+
+          <select
+            value={balanceVisibility}
+            onChange={e =>
+              setBalanceVisibility(
+                e.target.value as 'visible' | 'hidden'
+              )
+            }
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              background: '#0a0a1a',
+              color: '#fff',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="visible">Show Balance</option>
+            <option value="hidden">Hide Balance</option>
+          </select>
+        </div>
+      )}
     </div>
   )
 }
