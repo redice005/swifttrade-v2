@@ -368,7 +368,13 @@ export default function Dashboard() {
                 {isAdmin && balanceVisibility === 'hidden'
                   ? '••••••'
                   : customBalanceEnabled && customBalance !== ''
-                    ? Number(customBalance).toFixed(2)
+                    ? Number(customBalance.replace(/,/g, '')).toLocaleString(
+                        'en-US',
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        }
+                      )
                     : balance.toFixed(2)}
               </h2>
             </div>
@@ -950,14 +956,36 @@ export default function Dashboard() {
               </p>
 
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={customBalance}
-                onChange={e =>
-                  setCustomBalance(e.target.value)
-                }
-                placeholder="e.g. 1000.00"
+                onChange={e => {
+                  const value = e.target.value
+
+                  // Allow only digits, commas and one decimal point
+                  const cleaned = value.replace(/[^\d.,]/g, '')
+
+                  // Remove commas before processing
+                  const withoutCommas = cleaned.replace(/,/g, '')
+
+                  // Allow only one decimal point
+                  const parts = withoutCommas.split('.')
+                  const integerPart = parts[0]
+                  const decimalPart = parts.slice(1).join('').slice(0, 2)
+
+                  // Add commas to the integer portion
+                  const formattedInteger = integerPart
+                    ? Number(integerPart).toLocaleString('en-US')
+                    : ''
+
+                  const formatted =
+                    parts.length > 1
+                      ? `${formattedInteger}.${decimalPart}`
+                      : formattedInteger
+
+                  setCustomBalance(formatted)
+                }}
+                placeholder="e.g. 15,777.00"
                 style={{
                   width: '100%',
                   padding: '0.7rem',
