@@ -336,26 +336,34 @@ export default function Dashboard() {
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.55rem',
-                    lineHeight: 1,
+                    backgroundImage: 'url(https://flagcdn.com/w80/us.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                     flexShrink: 0,
-                    overflow: 'hidden'
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                    border: '1px solid rgba(255,255,255,0.15)'
                   }}
-                >
-                  🇺🇸
-                </div>
+                />
               )}
 
               <h2
                 style={{
                   margin: 0,
-                  fontSize: '1.3rem'
+                  fontSize: '1.05rem',
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '0.2rem'
                 }}
               >
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#aaa',
+                    fontWeight: 500
+                  }}
+                >
+                  {currency === 'USD' ? '$' : currency}
+                </span>
                 {isAdmin && balanceVisibility === 'hidden'
                   ? '••••••'
                   : customBalanceEnabled && customBalance !== ''
@@ -388,13 +396,13 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.3rem 0.5rem',
-                background: 'rgba(34,197,94,0.15)',
-                color: '#22c55e',
-                border: '1px solid #22c55e',
-                borderRadius: '6px',
+                padding: '0.22rem 0.45rem',
+                background: 'rgba(108,99,255,0.12)',
+                color: '#6c63ff',
+                border: '1px solid #6c63ff',
+                borderRadius: '5px',
                 cursor: 'pointer',
-                fontSize: '0.7rem',
+                fontSize: '0.62rem',
                 fontWeight: 'bold'
               }}
             >
@@ -409,13 +417,13 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.3rem 0.5rem',
-                background: 'rgba(108,99,255,0.15)',
+                padding: '0.22rem 0.45rem',
+                background: 'rgba(108,99,255,0.12)',
                 color: '#6c63ff',
                 border: '1px solid #6c63ff',
-                borderRadius: '6px',
+                borderRadius: '5px',
                 cursor: 'pointer',
-                fontSize: '0.7rem',
+                fontSize: '0.62rem',
                 fontWeight: 'bold'
               }}
             >
@@ -430,13 +438,13 @@ export default function Dashboard() {
                 )
               }
               style={{
-                padding: '0.3rem 0.5rem',
-                background: 'rgba(245,158,11,0.15)',
-                color: '#f59e0b',
-                border: '1px solid #f59e0b',
-                borderRadius: '6px',
+                padding: '0.22rem 0.45rem',
+                background: 'rgba(108,99,255,0.12)',
+                color: '#6c63ff',
+                border: '1px solid #6c63ff',
+                borderRadius: '5px',
                 cursor: 'pointer',
-                fontSize: '0.7rem',
+                fontSize: '0.62rem',
                 fontWeight: 'bold'
               }}
             >
