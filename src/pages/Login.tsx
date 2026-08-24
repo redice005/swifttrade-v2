@@ -206,7 +206,7 @@ export default function Login() {
               marginBottom: '3rem',
             }}
           >
-            Elite Execution Platform
+            Elite Deriv Execution Platform
           </div>
 
           {/* Progress heading */}
