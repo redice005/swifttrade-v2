@@ -590,7 +590,7 @@ export default function Login() {
             letterSpacing: '0.02em',
           }}
         >
-          Elite execution platform
+          Elite Deriv execution platform
         </p>
 
         {/* Feature pills */}
