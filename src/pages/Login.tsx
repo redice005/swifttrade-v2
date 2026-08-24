@@ -817,9 +817,9 @@ export default function Login() {
               style={{
                 flex: 1,
                 padding: '0.58rem',
-                background: 'rgba(34, 197, 94, 0.08)',
-                color: '#22c55e',
-                border: '1px solid rgba(34, 197, 94, 0.6)',
+                background: 'rgba(108, 99, 255, 0.08)',
+                color: '#8b7cff',
+                border: '1px solid rgba(108, 99, 255, 0.6)',
                 borderRadius: '7px',
                 cursor: 'pointer',
                 fontSize: '0.76rem',
@@ -829,12 +829,12 @@ export default function Login() {
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.background =
-                  'rgba(34, 197, 94, 0.14)'
+                  'rgba(108, 99, 255, 0.14)'
                 e.currentTarget.style.transform = 'translateY(-1px)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.background =
-                  'rgba(34, 197, 94, 0.08)'
+                  'rgba(108, 99, 255, 0.08)'
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
@@ -844,7 +844,7 @@ export default function Login() {
             <button
               onClick={() =>
                 window.open(
-                  'https://t.me/swifttrad3',
+                  'https://chat.whatsapp.com/FpK5e2hS73XIlcYnLVaZo8?s=cl&p=a&mlu=4',
                   '_blank'
                 )
               }
@@ -872,7 +872,7 @@ export default function Login() {
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
-              Telegram Community
+              WhatsApp Community
             </button>
           </div>
         </div>
